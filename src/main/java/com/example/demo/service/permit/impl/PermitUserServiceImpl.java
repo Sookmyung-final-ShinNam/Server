@@ -41,7 +41,6 @@ public class PermitUserServiceImpl implements PermitUserService {
     @Override
     public ResponseEntity<ApiResponse<TokenResponse>> signup(UserRequest userRequest) {
         ensureUserNotExists(userRequest.getUserId());
-        ensureUserNameNotExists(userRequest.getName());
         User newUser = saveNewUser(userRequest);
         TokenResponse tokenResponse = generateAndSaveToken(newUser);
         return buildSuccessResponse(SuccessStatus.USER_SIGNUP_SUCCESS, tokenResponse);
@@ -68,12 +67,6 @@ public class PermitUserServiceImpl implements PermitUserService {
         Token token = tokenRepository.findByUser(user).get();
         TokenResponse tokenResponse = tokenConverter.toResponse(token);
         return buildSuccessResponse(SuccessStatus.USER_LOGIN_SUCCESS, tokenResponse);
-    }
-
-    private void ensureUserNameNotExists(String name) {
-        if (userRepository.findByUserName(name).isPresent()) {
-            throw new CustomException(ErrorStatus.USER_ALREADY_EXISTS);
-        }
     }
 
     private void ensureUserNotExists(String userId) {
