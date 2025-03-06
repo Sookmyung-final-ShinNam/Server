@@ -2,7 +2,6 @@ package com.example.demo.base.code.exception;
 
 import com.example.demo.base.ApiResponse;
 import com.example.demo.base.status.ErrorStatus;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +11,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
