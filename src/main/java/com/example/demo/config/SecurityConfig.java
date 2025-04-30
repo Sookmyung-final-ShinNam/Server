@@ -18,8 +18,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -46,6 +47,7 @@ public class SecurityConfig {
                     authorize
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .requestMatchers("/api/permit/**").permitAll()
+                            .requestMatchers("/index.html", "/hello.html/**", "/").permitAll()  // 정적 파일 허용
                             .anyRequest().authenticated();
                 })
                 .oauth2Login(oauth -> {
@@ -56,14 +58,18 @@ public class SecurityConfig {
         return httpSecurity.build();
     }
 
-    CorsConfigurationSource corsConfigurationSource() {
-        return request -> {
-            CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedHeaders(Collections.singletonList("*"));
-            config.setAllowedMethods(Collections.singletonList("*"));
-            config.setAllowedOriginPatterns(Collections.singletonList("*"));
-            config.setAllowCredentials(true);
-            return config;
-        };
+    // CORS 설정: 카카오페이 API 요청 허용
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("https://online-payment.kakaopay.com")); // 카카오페이 API 허용
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE")); // 허용할 HTTP 메서드
+        configuration.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
+        configuration.setAllowCredentials(true); // 쿠키 및 인증 정보 허용
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
+
 }
