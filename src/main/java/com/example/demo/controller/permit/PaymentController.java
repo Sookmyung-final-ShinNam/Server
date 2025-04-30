@@ -4,15 +4,16 @@ import com.example.demo.domain.converter.payment.KakaoPayConverter;
 import com.example.demo.domain.dto.payment.ApproveResponse;
 import com.example.demo.domain.dto.payment.PaymentRequest;
 import com.example.demo.domain.dto.payment.ReadyResponse;
+import com.example.demo.repository.PaymentRepository;
 import com.example.demo.service.PaymentService;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ import java.util.Map;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final PaymentRepository paymentRepository;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Value("${kakao.redirect-url}")
@@ -36,25 +38,21 @@ public class PaymentController {
     @GetMapping("/approve")
     public String approvePayment(@RequestParam String pg_token, HttpServletRequest request) {
 
-        // 쿠키에서 tid 값을 찾기
-        String tid = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("tid".equals(cookie.getName())) {
-                    tid = cookie.getValue();
-                    break;
-                }
-            }
-        }
+        // 쿠키에서 TID 값을 찾기
+        String tid = findTidFromCookies(request);
 
         logger.info("pg_token: {}", pg_token);
         logger.info("tid: {}", tid);
 
+        // 결제 승인 처리
         ApproveResponse approveResponse = paymentService.approvePayment(pg_token, tid).getResult();
 
+        // 결제 금액 가져오기
+        int amount = paymentRepository.findByTid(tid).get().getAmount();
+
         // 리다이렉트 URL 동적 생성
-        String redirectTarget = redirectUrl + "/?approvedAt=" + approveResponse.getApprovedAt().toString();
+        String redirectTarget = redirectUrl + "/?approvedAt=" + approveResponse.getApprovedAt().toString()
+                + "&approvedAmount=" + amount;
 
         return "redirect:" + redirectTarget;
     }
@@ -96,6 +94,21 @@ public class PaymentController {
         response.put("redirectUrl", "/api/permit/payment/redirect?tid=" + tid + "&url=" + url);
 
         return ResponseEntity.ok(response);
+    }
+
+
+    private String findTidFromCookies(HttpServletRequest request) {
+        String tid = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("tid".equals(cookie.getName())) {
+                    tid = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        return tid;
     }
 
 }
