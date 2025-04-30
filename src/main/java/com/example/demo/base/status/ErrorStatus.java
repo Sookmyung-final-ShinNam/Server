@@ -32,7 +32,12 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 3. Yoon - 소셜 로그인 관련 에러
     OAUTH_LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "OAUTH_4001", "OAuth 로그인에 실패했습니다."),
-    OAUTH_PROCESSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "OAUTH_4002", "OAuth 로그인 처리에 실패했습니다.")
+    OAUTH_PROCESSING_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "OAUTH_4002", "OAuth 로그인 처리에 실패했습니다."),
+
+    // 4. Yoon - ChatGPT 관련 에러
+    CHAT_GPT_API_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CHAT_GPT_5001", "ChatGPT API 호출 실패. 관리자에게 문의해주세요."),
+    FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_GPT_4041", "파일을 찾을 수 없습니다."),
+    INVALID_REQUEST(HttpStatus.BAD_REQUEST, "CHAT_GPT_4001", "잘못된 요청입니다.");
 
 
     ;
