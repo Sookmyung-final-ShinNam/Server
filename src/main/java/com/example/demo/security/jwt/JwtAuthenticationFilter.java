@@ -118,7 +118,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 requestURI.startsWith("/webjars") ||
                 requestURI.startsWith("/api/permit/") ||
                 requestURI.equals("/favicon.ico") ||
-                requestURI.equals("/login");
+                requestURI.equals("/login") ||
+                requestURI.equals("/payment.html") ||
+                requestURI.startsWith("/paySuccess.html") ;
     }
 
     private void throwException(ErrorStatus errorStatus) throws Exception {

@@ -47,7 +47,7 @@ public class SecurityConfig {
                     authorize
                             .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                             .requestMatchers("/api/permit/**").permitAll()
-                            .requestMatchers("/index.html", "/hello.html/**", "/").permitAll()  // 정적 파일 허용
+                            .requestMatchers("/payment.html", "/paySuccess.html/**", "/").permitAll()  // 정적 파일 허용
                             .anyRequest().authenticated();
                 })
                 .oauth2Login(oauth -> {
