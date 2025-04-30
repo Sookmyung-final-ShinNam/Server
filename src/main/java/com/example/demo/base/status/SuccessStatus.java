@@ -23,7 +23,11 @@ public enum SuccessStatus implements BaseCode {
     TOKEN_REFRESH_SUCCESS(HttpStatus.OK, "TOKEN_2001", "리프레시 토큰을 통한 토큰 갱신에 성공하였습니다."),
 
     // 3. Yoon - ChatGPT 관련 성공
-    CHAT_SUCCESS(HttpStatus.OK, "CHAT_2001", "gpt 호출이 성공하였습니다.")
+    CHAT_SUCCESS(HttpStatus.OK, "CHAT_2001", "gpt 호출이 성공하였습니다."),
+
+    // 4. Yoon - 결제 관련 성공
+    PAYMENT_READY_SUCCESS(HttpStatus.OK, "PAYMENT_2001", "결제 준비가 성공적으로 완료되었습니다."),
+    PAYMENT_APPROVE_SUCCESS(HttpStatus.OK, "PAYMENT_2002", "결제 승인이 성공적으로 완료되었습니다.")
 
 
     ;
