@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 public class ChatServiceImpl implements ChatService {
 
     private final PromptLoader promptLoader;
+    private final ObjectMapper objectMapper;
 
     @Value("${chatgpt.api-key}")
     private String apiKey;
@@ -60,9 +61,27 @@ public class ChatServiceImpl implements ChatService {
                 .replace("{context}", request.getContext())
                 .replace("{user_answer}", request.getUserAnswer());
 
+        // GPT 호출
         String answer = callChatGpt(body);
 
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+        // GPT의 응답을 파싱
+        boolean isAppropriateAnswer = false;
+        String result = "";
+
+        // '맞아' 또는 '아니야'로 시작하는지 확인
+        if (answer.startsWith("맞아")) {
+            isAppropriateAnswer = true;
+            result = answer.substring(4);  // '맞아' 이후의 내용을 추출
+        } else if (answer.startsWith("아니야")) {
+            isAppropriateAnswer = false;
+            result = answer.substring(5);  // '아니야' 이후의 내용을 추출
+        }
+
+        // StoryFeedbackResult 객체 생성
+        StoryFeedbackResult parsedResult = new StoryFeedbackResult(result, isAppropriateAnswer);
+
+        // ApiResponse로 반환
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, parsedResult);
     }
 
     @Override

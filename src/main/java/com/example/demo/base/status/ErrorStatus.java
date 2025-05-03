@@ -38,6 +38,7 @@ public enum ErrorStatus implements BaseErrorCode {
     CHAT_GPT_API_CALL_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CHAT_GPT_5001", "ChatGPT API 호출 실패. 관리자에게 문의해주세요."),
     FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT_GPT_4041", "파일을 찾을 수 없습니다."),
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "CHAT_GPT_4001", "잘못된 요청입니다."),
+    JSON_PARSE_ERROR(HttpStatus.BAD_REQUEST, "JSON_1001", "JSON 파싱 오류"),
 
     // 5. Yoon - 결제 관련 에러
     PAYMENT_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "PAY_4001", "PAY API 요청 실패"),
