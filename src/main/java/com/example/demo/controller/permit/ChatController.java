@@ -2,6 +2,7 @@ package com.example.demo.controller.permit;
 
 import com.example.demo.base.ApiResponse;
 import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
+import com.example.demo.domain.dto.gpt.StoryIntroRequest;
 import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
 import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
 import com.example.demo.service.ChatService;
@@ -31,6 +32,12 @@ public class ChatController {
     @PostMapping("/story-feedback")
     public ApiResponse provideStoryFeedback(@RequestBody StoryFeedbackRequest request) {
         return chatService.provideStoryFeedback(request, "story_context_helper_prompt.json");
+    }
+
+    // 4. 이야기 시작 문장 생성
+    @PostMapping("/generate-story-intro")
+    public ApiResponse generateStoryIntro(@RequestBody StoryIntroRequest request) {
+        return chatService.generateStoryIntro(request, "story_intro_prompt.json");
     }
 
 }

@@ -5,6 +5,7 @@ import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
 import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
+import com.example.demo.domain.dto.gpt.StoryIntroRequest;
 import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
 import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
 import com.example.demo.service.ChatService;
@@ -61,6 +62,25 @@ public class ChatServiceImpl implements ChatService {
         String body = bodyTemplate
                 .replace("{context}", request.getContext())
                 .replace("{user_answer}", request.getUserAnswer());
+
+        String answer = callChatGpt(body);
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+    }
+
+    @Override
+    public ApiResponse generateStoryIntro(StoryIntroRequest request, String promptFileName) {
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        String body = bodyTemplate
+                .replace("{themes}", request.getThemes())
+                .replace("{backgrounds}", request.getBackgrounds())
+                .replace("{name}", request.getName())
+                .replace("{gender}", request.getGender())
+                .replace("{age}", String.valueOf(request.getAge()))
+                .replace("{hair_color}", request.getHairColor())
+                .replace("{eye_color}", request.getEyeColor())
+                .replace("{hair_style}", request.getHairStyle());
 
         String answer = callChatGpt(body);
 
