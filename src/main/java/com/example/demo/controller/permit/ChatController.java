@@ -5,6 +5,7 @@ import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
 import com.example.demo.domain.dto.gpt.StoryIntroRequest;
 import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
 import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
+import com.example.demo.domain.dto.gpt.StoryQuestionRequest;
 import com.example.demo.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +39,12 @@ public class ChatController {
     @PostMapping("/generate-story-intro")
     public ApiResponse generateStoryIntro(@RequestBody StoryIntroRequest request) {
         return chatService.generateStoryIntro(request, "story_intro_prompt.json");
+    }
+
+    // 5. 상황 기반 질문 생성
+    @PostMapping("/generate-question")
+    public ApiResponse generateQuestion(@RequestBody StoryQuestionRequest request) {
+        return chatService.generateQuestion(request, "generate_story_question_prompt.json");
     }
 
 }

@@ -4,6 +4,7 @@ import com.example.demo.base.ApiResponse;
 import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
 import com.example.demo.domain.dto.gpt.StoryIntroRequest;
 import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
+import com.example.demo.domain.dto.gpt.StoryQuestionRequest;
 import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
 
 public interface ChatService {
@@ -15,5 +16,7 @@ public interface ChatService {
     ApiResponse provideStoryFeedback(StoryFeedbackRequest request, String promptFileName);
 
     ApiResponse generateStoryIntro(StoryIntroRequest request, String promptFileName);
+
+    ApiResponse generateQuestion(StoryQuestionRequest request, String promptFileName);
 
 }

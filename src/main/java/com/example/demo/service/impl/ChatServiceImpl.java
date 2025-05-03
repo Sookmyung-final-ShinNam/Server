@@ -4,10 +4,7 @@ import com.example.demo.base.ApiResponse;
 import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
-import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
-import com.example.demo.domain.dto.gpt.StoryIntroRequest;
-import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
-import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
+import com.example.demo.domain.dto.gpt.*;
 import com.example.demo.service.ChatService;
 import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -81,6 +78,18 @@ public class ChatServiceImpl implements ChatService {
                 .replace("{hair_color}", request.getHairColor())
                 .replace("{eye_color}", request.getEyeColor())
                 .replace("{hair_style}", request.getHairStyle());
+
+        String answer = callChatGpt(body);
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+    }
+
+    @Override
+    public ApiResponse generateQuestion(StoryQuestionRequest request, String promptFileName) {
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        String body = bodyTemplate
+                .replace("{situation}", request.getSituation());
 
         String answer = callChatGpt(body);
 
