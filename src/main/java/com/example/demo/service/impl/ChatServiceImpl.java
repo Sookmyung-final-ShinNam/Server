@@ -105,14 +105,10 @@ public class ChatServiceImpl implements ChatService {
 
         String answer = callChatGpt(body);
 
-        // 동화 제목 설정
         String title = String.format("주제: %s, 배경: %s", request.getThemes(), request.getBackgrounds());
-
-        // 요정 외모 설정
         String appearance = String.format("성별: %s, 나이: %d, 머리 색상: %s, 눈 색상: %s, 머리스타일: %s",
                 request.getGender(), request.getAge(), request.getHairColor(), request.getEyeColor(), request.getHairStyle());
 
-        // 요정 요청 객체 생성
         FairyRequest fairyRequest = FairyRequest.builder()
                 .name(request.getName())
                 .personality("착함")
@@ -121,11 +117,8 @@ public class ChatServiceImpl implements ChatService {
                 .content(answer)
                 .build();
 
-        // FairyResponse 반환값 받아오기
-        ApiResponse response = fairyService.createFairy(userId, fairyRequest);
-
-        // 반환
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
+        // 이미 ApiResponse 타입이라면 바로 반환
+        return fairyService.createFairy(userId, fairyRequest);
     }
 
     @Override
