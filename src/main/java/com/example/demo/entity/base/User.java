@@ -3,6 +3,7 @@ package com.example.demo.entity.base;
 import com.example.demo.entity.enums.Provider;
 import com.example.demo.entity.enums.Status;
 import com.example.demo.entity.relations.UserRelations;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -46,10 +47,12 @@ public class User extends UserRelations {
 
     // 유저가 소유한 요정들
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Fairy> fairies = new ArrayList<>();
 
     // 유저가 소유한 동화들
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<FairyTale> fairyTales = new ArrayList<>();
 
 

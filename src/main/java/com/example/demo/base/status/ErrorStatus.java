@@ -44,7 +44,10 @@ public enum ErrorStatus implements BaseErrorCode {
     PAYMENT_REQUEST_FAILED(HttpStatus.BAD_REQUEST, "PAY_4001", "PAY API 요청 실패"),
     PAYMENT_REQUEST_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAY_4002", "PAY API 요청 중 오류 발생"),
     PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT_4041", "결제 정보가 없습니다"),
-    PAYMENT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT_4003", "결제 정보 저장 실패")
+    PAYMENT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT_4003", "결제 정보 저장 실패"),
+
+    // 동화 관련 에러
+    FAIRY_TALE_NOT_FOUND(HttpStatus.NOT_FOUND, "FAIRY_TALE_4004", "해당 동화를 찾을 수 없습니다.")
 
 
     ;

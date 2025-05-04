@@ -8,7 +8,7 @@ import com.example.demo.domain.converter.payment.KakaoPayConverter;
 import com.example.demo.domain.dto.payment.ApproveResponse;
 import com.example.demo.domain.dto.payment.PaymentRequest;
 import com.example.demo.domain.dto.payment.ReadyResponse;
-import com.example.demo.entity.base.payment.Payment;
+import com.example.demo.entity.base.Payment;
 import com.example.demo.repository.PaymentRepository;
 import com.example.demo.service.PaymentService;
 import org.slf4j.Logger;

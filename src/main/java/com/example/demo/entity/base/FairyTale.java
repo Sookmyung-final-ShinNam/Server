@@ -1,51 +1,39 @@
 package com.example.demo.entity.base;
 
 import com.example.demo.entity.BaseEntity;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
 @Getter
 @Setter
-@Entity
-@Builder
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class FairyTale extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String title; // 제목
+    private String title;
 
     @Lob
-    private String content; // 내용
+    private String content;
 
-    // 동화의 주인 (소유자)
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonBackReference
     private User user;
 
-    @ManyToMany
-    @JoinTable(
-            name = "fairy_tale_fairy",
-            joinColumns = @JoinColumn(name = "fairy_tale_id"),
-            inverseJoinColumns = @JoinColumn(name = "fairy_id")
-    )
-    private List<Fairy> fairies = new ArrayList<>();
-
-    // 모든 필드를 초기화하는 생성자 추가
-    public FairyTale(Long id, String title, String content, User user, List<Fairy> fairies) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.user = user;
-        this.fairies = fairies;
-    }
+    @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    @JsonManagedReference
+    private List<FairyAppearance> appearances = new ArrayList<>();
 
 }
