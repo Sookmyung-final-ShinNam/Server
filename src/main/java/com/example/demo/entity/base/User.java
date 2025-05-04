@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -41,6 +43,15 @@ public class User extends UserRelations {
     // 탈퇴 시간 기록 ( 이 시간으로부터 일정 시간 이상 지나면 자동으로 사용자 정보가 삭제됨. 재로그인시 탈퇴 시간이 삭제되고 활성화 상태로 설정됨. )
     @Column
     private LocalDateTime withdrawTime;
+
+    // 유저가 소유한 요정들
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Fairy> fairies = new ArrayList<>();
+
+    // 유저가 소유한 동화들
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<FairyTale> fairyTales = new ArrayList<>();
+
 
     // 메서드
 
