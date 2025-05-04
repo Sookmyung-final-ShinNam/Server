@@ -4,12 +4,15 @@ import com.example.demo.base.ApiResponse;
 import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
+import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.gpt.*;
 import com.example.demo.service.ChatService;
+import com.example.demo.service.FairyService;
 import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -23,13 +26,15 @@ import java.nio.charset.StandardCharsets;
 public class ChatServiceImpl implements ChatService {
 
     private final PromptLoader promptLoader;
-    private final ObjectMapper objectMapper;
 
     @Value("${chatgpt.api-key}")
     private String apiKey;
 
+    @Autowired
+    private FairyService fairyService;
+
     @Override
-    public ApiResponse correctUserAnswer(UserAnswerCorrectionRequest request, String promptFileName) {
+    public ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         String body = bodyTemplate
@@ -42,7 +47,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ApiResponse analyzeUserText(UserTextAnalysisRequest request, String promptFileName) {
+    public ApiResponse analyzeUserText(String userId, UserTextAnalysisRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         String body = bodyTemplate
@@ -54,7 +59,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ApiResponse provideStoryFeedback(StoryFeedbackRequest request, String promptFileName) {
+    public ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         String body = bodyTemplate
@@ -85,7 +90,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public ApiResponse generateStoryIntro(StoryIntroRequest request, String promptFileName) {
+    public ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         String body = bodyTemplate
@@ -100,11 +105,29 @@ public class ChatServiceImpl implements ChatService {
 
         String answer = callChatGpt(body);
 
+        // 동화 제목에 주제와 배경을 포함
+        String title = String.format("주제: %s, 배경: %s", request.getThemes(), request.getBackgrounds());
+
+        // 요정 외모를 성별, 나이, 머리 색상, 눈 색상, 머리스타일을 포함하여 설정
+        String appearance = String.format("성별: %s, 나이: %d, 머리 색상: %s, 눈 색상: %s, 머리스타일: %s",
+                request.getGender(), request.getAge(), request.getHairColor(), request.getEyeColor(), request.getHairStyle());
+
+        // 요정 생성: 기본 성격, 외모, 제목을 설정
+        FairyRequest fairyRequest = FairyRequest.builder()
+                .name(request.getName())           // 요정 이름
+                .personality("착함")               // 기본 성격 설정 (착함)
+                .appearance(appearance)           // 요정 외모 (성별, 나이, 머리 색상, 눈 색상, 머리스타일)
+                .title(title)                     // 동화 제목에 주제와 배경 포함
+                .content(answer)                  // 생성된 동화 내용 설정
+                .build();
+
+        fairyService.createFairy(userId, fairyRequest);
+
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
 
     @Override
-    public ApiResponse generateQuestion(StoryQuestionRequest request, String promptFileName) {
+    public ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         String body = bodyTemplate

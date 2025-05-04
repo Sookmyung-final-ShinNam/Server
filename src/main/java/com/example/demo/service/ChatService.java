@@ -9,14 +9,14 @@ import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
 
 public interface ChatService {
 
-    ApiResponse correctUserAnswer(UserAnswerCorrectionRequest request, String promptFileName);
+    ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName);
 
-    ApiResponse analyzeUserText(UserTextAnalysisRequest request, String promptFileName);
+    ApiResponse analyzeUserText(String userId, UserTextAnalysisRequest request, String promptFileName);
 
-    ApiResponse provideStoryFeedback(StoryFeedbackRequest request, String promptFileName);
+    ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName);
 
-    ApiResponse generateStoryIntro(StoryIntroRequest request, String promptFileName);
+    ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName);
 
-    ApiResponse generateQuestion(StoryQuestionRequest request, String promptFileName);
+    ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName);
 
 }
