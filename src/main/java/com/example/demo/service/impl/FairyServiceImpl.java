@@ -39,7 +39,7 @@ public class FairyServiceImpl implements FairyService {
 
     @Override
     @Transactional
-    public ApiResponse<?> createFairy(String userId, FairyRequest request) {
+    public ApiResponse createFairy(String userId, FairyRequest request) {
         // 1. 사용자 조회
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
@@ -70,6 +70,7 @@ public class FairyServiceImpl implements FairyService {
                 .name(fairy.getName())
                 .personality(fairy.getPersonality())
                 .appearance(fairy.getAppearance())
+                .fairyTaleId(fairyTale.getId())
                 .fairyTaleTitle(fairyTale.getTitle())
                 .fairyTaleContent(fairyTale.getContent())
                 .build();

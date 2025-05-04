@@ -105,25 +105,27 @@ public class ChatServiceImpl implements ChatService {
 
         String answer = callChatGpt(body);
 
-        // 동화 제목에 주제와 배경을 포함
+        // 동화 제목 설정
         String title = String.format("주제: %s, 배경: %s", request.getThemes(), request.getBackgrounds());
 
-        // 요정 외모를 성별, 나이, 머리 색상, 눈 색상, 머리스타일을 포함하여 설정
+        // 요정 외모 설정
         String appearance = String.format("성별: %s, 나이: %d, 머리 색상: %s, 눈 색상: %s, 머리스타일: %s",
                 request.getGender(), request.getAge(), request.getHairColor(), request.getEyeColor(), request.getHairStyle());
 
-        // 요정 생성: 기본 성격, 외모, 제목을 설정
+        // 요정 요청 객체 생성
         FairyRequest fairyRequest = FairyRequest.builder()
-                .name(request.getName())           // 요정 이름
-                .personality("착함")               // 기본 성격 설정 (착함)
-                .appearance(appearance)           // 요정 외모 (성별, 나이, 머리 색상, 눈 색상, 머리스타일)
-                .title(title)                     // 동화 제목에 주제와 배경 포함
-                .content(answer)                  // 생성된 동화 내용 설정
+                .name(request.getName())
+                .personality("착함")
+                .appearance(appearance)
+                .title(title)
+                .content(answer)
                 .build();
 
-        fairyService.createFairy(userId, fairyRequest);
+        // FairyResponse 반환값 받아오기
+        ApiResponse response = fairyService.createFairy(userId, fairyRequest);
 
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+        // 반환
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
     }
 
     @Override
