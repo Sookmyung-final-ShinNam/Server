@@ -6,6 +6,8 @@ import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.gpt.*;
+import com.example.demo.entity.base.FairyTale;
+import com.example.demo.repository.FairyTaleRepository;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.FairyService;
 import com.example.demo.util.PromptLoader;
@@ -32,6 +34,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private FairyService fairyService;
+
+    @Autowired
+    private FairyTaleRepository fairyTaleRepository;
 
     @Override
     public ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName) {
@@ -123,16 +128,21 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName) {
+        // prompt 템플릿 로딩
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
-        String body = bodyTemplate
-                .replace("{situation}", request.getSituation());
+        // 동화 번호로 FairyTale 엔티티 조회
+        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
+        // 동화의 content를 situation으로 설정
+        String body = bodyTemplate.replace("{situation}", fairyTale.getContent());
+
+        // GPT 호출
         String answer = callChatGpt(body);
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
-
 
     // 공통 부분 : gpt 호출
     private String callChatGpt(String body) {
