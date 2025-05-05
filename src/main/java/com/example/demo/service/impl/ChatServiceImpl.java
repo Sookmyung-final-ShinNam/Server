@@ -110,6 +110,11 @@ public class ChatServiceImpl implements ChatService {
 
         String answer = callChatGpt(body);
 
+        // 양끝의 따옴표를 제거
+        if (answer.startsWith("\"") && answer.endsWith("\"")) {
+            answer = answer.substring(1, answer.length() - 1);
+        }
+
         String title = String.format("주제: %s, 배경: %s", request.getThemes(), request.getBackgrounds());
         String appearance = String.format("성별: %s, 나이: %d, 머리 색상: %s, 눈 색상: %s, 머리스타일: %s",
                 request.getGender(), request.getAge(), request.getHairColor(), request.getEyeColor(), request.getHairStyle());
