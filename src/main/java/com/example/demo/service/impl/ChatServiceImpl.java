@@ -64,35 +64,40 @@ public class ChatServiceImpl implements ChatService {
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
 
+    private static final int MAX_RETRY = 3;
     @Override
     public ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
         String body = bodyTemplate
                 .replace("{context}", request.getContext())
                 .replace("{user_answer}", request.getUserAnswer());
 
-        // GPT 호출
-        String answer = callChatGpt(body);
-
-        // GPT의 응답을 파싱
+        String answer = null;
         boolean isAppropriateAnswer = false;
-        String result = "";
+        String result = null;
 
-        // '맞아' 또는 '아니야'로 시작하는지 확인
-        if (answer.startsWith("맞아")) {
-            isAppropriateAnswer = true;
-            result = answer.substring(4);  // '맞아' 이후의 내용을 추출
-        } else if (answer.startsWith("아니야")) {
-            isAppropriateAnswer = false;
-            result = answer.substring(5);  // '아니야' 이후의 내용을 추출
+        for (int i = 0; i < MAX_RETRY; i++) {
+            answer = callChatGpt(body).trim();
+
+            if (answer.startsWith("맞아")) {
+                isAppropriateAnswer = true;
+                result = answer.substring(4).trim();
+                break;
+            } else if (answer.startsWith("아니야")) {
+                isAppropriateAnswer = false;
+                result = answer.substring(5).trim();
+                break;
+            }
+
         }
 
-        // StoryFeedbackResult 객체 생성
-        StoryFeedbackResult parsedResult = new StoryFeedbackResult(result, isAppropriateAnswer);
+        // 재시도 후에도 실패한 경우
+        if (result == null) {
+            result = "이야기 흐름을 확인하고 있어. 잠시 후 다시 시도해줘!";
+            isAppropriateAnswer = false;
+        }
 
-        // ApiResponse로 반환
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, parsedResult);
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
     }
 
     @Override
