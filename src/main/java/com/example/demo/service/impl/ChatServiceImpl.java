@@ -4,6 +4,7 @@ import com.example.demo.base.ApiResponse;
 import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
+import com.example.demo.domain.dto.FairyTale.FairyTaleGenerateQuesetionResponse;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.gpt.*;
 import com.example.demo.entity.base.FairyTale;
@@ -146,7 +147,11 @@ public class ChatServiceImpl implements ChatService {
         // GPT 호출
         String answer = callChatGpt(body);
 
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+        // 객체 반환
+        FairyTaleGenerateQuesetionResponse response = new FairyTaleGenerateQuesetionResponse(answer, fairyTale.getContent());
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
+
     }
 
     // 공통 부분 : gpt 호출
