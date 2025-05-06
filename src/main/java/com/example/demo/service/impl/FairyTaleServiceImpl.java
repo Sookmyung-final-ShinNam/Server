@@ -32,7 +32,7 @@ public class FairyTaleServiceImpl implements FairyTaleService {
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
         // 기존 내용에 추가
-        fairyTale.setContent(fairyTale.getContent() + "\n" + content); // 기존 내용 뒤에 새 내용 추가
+        fairyTale.setContent(fairyTale.getContent() + content); // 기존 내용 뒤에 새 내용 추가
 
         fairyTaleRepository.save(fairyTale);
 
