@@ -3,6 +3,7 @@ package com.example.demo.controller.user;
 import com.example.demo.base.ApiResponse;
 import com.example.demo.controller.BaseController;
 import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
+import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
 import com.example.demo.domain.dto.gpt.StoryIntroRequest;
 import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
 import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
@@ -52,5 +53,13 @@ public class ChatController extends BaseController {
         String userId = getCurrentUserId();
         return chatService.generateQuestion(userId, request, "generate_story_question_prompt.json");
     }
+
+    // 6. 상황 기반 엔딩 생성
+    @PostMapping("/generate-fairy-ending")
+    public ApiResponse generateFairyEnding(@RequestBody FairyEndingRequest request) {
+        String userId = getCurrentUserId();
+        return chatService.generateFairyEnding(userId, request, "fairytale_endings_prompt.json");
+    }
+
 
 }

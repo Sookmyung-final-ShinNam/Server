@@ -4,6 +4,7 @@ import com.example.demo.base.ApiResponse;
 import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
+import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
 import com.example.demo.domain.dto.FairyTale.FairyTaleGenerateQuesetionResponse;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.gpt.*;
@@ -11,6 +12,7 @@ import com.example.demo.entity.base.FairyTale;
 import com.example.demo.repository.FairyTaleRepository;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.FairyService;
+import com.example.demo.service.FairyTaleService;
 import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +40,8 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private FairyTaleRepository fairyTaleRepository;
+    @Autowired
+    private FairyTaleService fairyTaleService;
 
     @Override
     public ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName) {
@@ -190,6 +194,26 @@ public class ChatServiceImpl implements ChatService {
         } catch (IOException e) {
             throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
         }
+    }
+
+    @Override
+    public ApiResponse<?> generateFairyEnding(String userId, FairyEndingRequest request, String promptFileName) {
+        // 프롬프트 템플릿 로드
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        // 동화 콘텐츠 불러오기
+        ApiResponse<?> response = fairyTaleService.getFairyTaleContent(userId, request.getFairyTaleNum());
+        // 동화 콘텐츠 추출
+        String content = (String) response.getResult();
+
+        // 프롬프트 본문 구성
+        String body = bodyTemplate.replace("{situation}", content);
+        // ChatGPT API 호출하여 결말 생성
+        String answer = callChatGpt(body);
+
+        // 생성된 결말로 동화 업데이트
+        return fairyTaleService.updateFairyTaleContent(userId, request.getFairyTaleNum(), answer);
+
     }
 
 }
