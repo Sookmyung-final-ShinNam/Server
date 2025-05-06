@@ -2,12 +2,8 @@ package com.example.demo.controller.user;
 
 import com.example.demo.base.ApiResponse;
 import com.example.demo.controller.BaseController;
-import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
+import com.example.demo.domain.dto.gpt.*;
 import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
-import com.example.demo.domain.dto.gpt.StoryIntroRequest;
-import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
-import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
-import com.example.demo.domain.dto.gpt.StoryQuestionRequest;
 import com.example.demo.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -61,5 +57,11 @@ public class ChatController extends BaseController {
         return chatService.generateFairyEnding(userId, request, "fairytale_endings_prompt.json");
     }
 
+    // 7. 주인공 특징 요약
+    @PostMapping("/generate-protagonist-summary")
+    public ApiResponse generateProtagonistSummary(@RequestBody ProtagonistSummaryRequest request) {
+        String userId = getCurrentUserId();
+        return chatService.generateProtagonistSummary(userId, request, "fairytale_character_summary.json");
+    }
 
 }

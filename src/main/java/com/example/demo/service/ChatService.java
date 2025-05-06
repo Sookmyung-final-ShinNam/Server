@@ -2,11 +2,7 @@ package com.example.demo.service;
 
 import com.example.demo.base.ApiResponse;
 import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
-import com.example.demo.domain.dto.gpt.StoryFeedbackRequest;
-import com.example.demo.domain.dto.gpt.StoryIntroRequest;
-import com.example.demo.domain.dto.gpt.UserAnswerCorrectionRequest;
-import com.example.demo.domain.dto.gpt.StoryQuestionRequest;
-import com.example.demo.domain.dto.gpt.UserTextAnalysisRequest;
+import com.example.demo.domain.dto.gpt.*;
 
 public interface ChatService {
 
@@ -21,5 +17,7 @@ public interface ChatService {
     ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName);
 
     ApiResponse generateFairyEnding(String userId, FairyEndingRequest request, String promptFileName);
+
+    ApiResponse generateProtagonistSummary(String userId, ProtagonistSummaryRequest request, String promptFileName);
 
 }

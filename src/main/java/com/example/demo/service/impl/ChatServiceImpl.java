@@ -216,4 +216,24 @@ public class ChatServiceImpl implements ChatService {
 
     }
 
+    @Override
+    public ApiResponse generateProtagonistSummary(String userId, ProtagonistSummaryRequest request, String promptFileName) {
+        // 프롬프트 템플릿 로드
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        // 동화 콘텐츠 불러오기
+        ApiResponse<?> response = fairyTaleService.getFairyTaleContent(userId, request.getFairyTaleNum());
+        // 동화 콘텐츠 추출
+        String content = (String) response.getResult();
+
+        // 템플릿에 삽입
+        String body = bodyTemplate.replace("{situation}", content);
+
+        // ChatGPT API 호출하여 주인공 특징 요약 생성
+        String answer = callChatGpt(body);
+
+        // 생성된 요약 반환
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+    }
+
 }
