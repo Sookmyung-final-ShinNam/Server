@@ -10,6 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StoryFeedbackResult {
-    private String result;
-    private boolean isAppropriateAnswer;
+    private String feedbackText;
+    private boolean appropriate;
 }
