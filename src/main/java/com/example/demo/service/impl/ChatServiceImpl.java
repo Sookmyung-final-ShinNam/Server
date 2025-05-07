@@ -17,6 +17,7 @@ import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatServiceImpl implements ChatService {
@@ -95,11 +97,20 @@ public class ChatServiceImpl implements ChatService {
 
         }
 
+        log.debug("최종 분석 전 결과: {}", result);
+
         // 재시도 후에도 실패한 경우
         if (result == null) {
             result = "이야기 흐름을 확인하고 있어. 잠시 후 다시 시도해줘!";
             isAppropriateAnswer = false;
         }
+
+        UserTextAnalysisRequest analysisRequest = new UserTextAnalysisRequest();
+        analysisRequest.setUserAnswer(result); // 사용자의 답변 저장
+
+        Object resultObject = analyzeUserText(userId, analysisRequest, "find_significant_words.json").getResult();
+        // Object 타입을 String으로 변환
+        result = (resultObject != null) ? resultObject.toString() : "";
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
     }
