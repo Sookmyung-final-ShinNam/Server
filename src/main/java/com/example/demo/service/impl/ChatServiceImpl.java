@@ -105,13 +105,6 @@ public class ChatServiceImpl implements ChatService {
             isAppropriateAnswer = false;
         }
 
-        UserTextAnalysisRequest analysisRequest = new UserTextAnalysisRequest();
-        analysisRequest.setUserAnswer(result); // 사용자의 답변 저장
-
-        Object resultObject = analyzeUserText(userId, analysisRequest, "find_significant_words.json").getResult();
-        // Object 타입을 String으로 변환
-        result = (resultObject != null) ? resultObject.toString() : "";
-
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
     }
 
