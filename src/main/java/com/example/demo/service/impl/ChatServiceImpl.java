@@ -74,8 +74,13 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        // 동화 번호로 FairyTale 엔티티 조회
+        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+
         String body = bodyTemplate
-                .replace("{context}", request.getContext())
+                .replace("{context}", request.getContext()+fairyTale.getQuestion())
                 .replace("{user_answer}", request.getUserAnswer());
 
         String answer = null;
@@ -159,6 +164,10 @@ public class ChatServiceImpl implements ChatService {
 
         // GPT 호출
         String answer = callChatGpt(body);
+
+        // 임시 저장
+        fairyTale.setQuestion(answer);
+        fairyTaleRepository.save(fairyTale);
 
         // 객체 반환
         FairyTaleGenerateQuesetionResponse response = new FairyTaleGenerateQuesetionResponse(answer, fairyTale.getContent());

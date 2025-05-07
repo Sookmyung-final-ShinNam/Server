@@ -26,6 +26,8 @@ public class FairyTale extends BaseEntity {
     @Lob
     private String content;
 
+    private String question;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference

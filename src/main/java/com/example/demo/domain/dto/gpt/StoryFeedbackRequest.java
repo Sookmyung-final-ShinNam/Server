@@ -8,6 +8,7 @@ import lombok.Setter;
 public class StoryFeedbackRequest {
 
     private String context;
+    private String fairyTaleNum;
     private String userAnswer;
 
 }
