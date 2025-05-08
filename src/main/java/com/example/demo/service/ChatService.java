@@ -12,6 +12,8 @@ public interface ChatService {
 
     ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName);
 
+    ApiResponse provideStoryNext(String userId, StoryFeedbackRequest request, String promptFileName);
+
     ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName);
 
     ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName);

@@ -36,6 +36,13 @@ public class ChatController extends BaseController {
         return chatService.provideStoryFeedback(userId, request, "story_context_helper_prompt.json");
     }
 
+    // 3. 이야기 흐름에 맞는 다음 이야기
+    @PostMapping("/story-next")
+    public ApiResponse provideStoryNext(@RequestBody StoryFeedbackRequest request) {
+        String userId = getCurrentUserId();
+        return chatService.provideStoryNext(userId, request, "story_context_helper_end.json");
+    }
+
     // 4. 이야기 시작 문장 생성
     @PostMapping("/generate-story-intro")
     public ApiResponse generateStoryIntro(@RequestBody StoryIntroRequest request) {

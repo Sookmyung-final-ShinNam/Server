@@ -72,6 +72,46 @@ public class ChatServiceImpl implements ChatService {
 
     private static final int MAX_RETRY = 3;
     @Override
+    public ApiResponse provideStoryNext(String userId, StoryFeedbackRequest request, String promptFileName) {
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        // 동화 번호로 FairyTale 엔티티 조회
+        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+
+        String body = bodyTemplate
+                .replace("{context}", request.getContext()+fairyTale.getQuestion())
+                .replace("{user_answer}", request.getUserAnswer());
+
+        String answer = null;
+        boolean isAppropriateAnswer = false;
+        String result = null;
+
+        for (int i = 0; i < MAX_RETRY; i++) {
+            answer = callChatGpt(body).trim();
+            log.debug("GPT 응답: {}", answer); // 전체 GPT 응답 로그 출력
+
+            // '맞아. 하지만 이렇게 바꾸면 적절해줘!'가 포함되어 있는지 확인
+            int startIdx = answer.indexOf("맞아. 이렇게 바꾸면 더 적절해!");
+            if (startIdx != -1) {
+                isAppropriateAnswer = true;
+                result = answer.substring(startIdx).trim();
+                break;
+            }
+        }
+
+        log.debug("최종 분석 전 결과: {}", result);
+
+        // 재시도 후에도 실패한 경우
+        if (result == null) {
+            result = "이야기 흐름을 확인하고 있어. 잠시 후 다시 시도해줘!";
+            isAppropriateAnswer = false;
+        }
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
+    }
+
+    @Override
     public ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
@@ -154,6 +194,8 @@ public class ChatServiceImpl implements ChatService {
     public ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName) {
         // prompt 템플릿 로딩
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        log.debug("generateQuestion 호출 - userId: {}, fairyTaleNum: {}, promptFileName: {}", userId, request.getFairyTaleNum(), promptFileName);
 
         // 동화 번호로 FairyTale 엔티티 조회
         FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
