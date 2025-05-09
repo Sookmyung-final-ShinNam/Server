@@ -16,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "faryTale")
 public class FairyTale extends BaseEntity {
 
     @Id
@@ -49,6 +50,9 @@ public class FairyTale extends BaseEntity {
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonManagedReference
-    private List<FairyAppearance> appearances = new ArrayList<>();
+    private List<FairyParticipation> appearances = new ArrayList<>();
 
+    @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Page> pages = new ArrayList<>();
 }

@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FairyAppearance {
+public class FairyParticipation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,7 +24,7 @@ public class FairyAppearance {
 
     // 등장하는 동화
     @ManyToOne
-    @JoinColumn(name = "fairy_tale_id")
+    @JoinColumn(name = "faryTale_id")
     @JsonBackReference
     private FairyTale fairyTale;  // 등장한 동화
 

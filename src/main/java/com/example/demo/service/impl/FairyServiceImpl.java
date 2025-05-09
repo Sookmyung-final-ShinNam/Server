@@ -51,7 +51,7 @@ public class FairyServiceImpl implements FairyService {
         FairyTale fairyTale = fairyTaleConverter.toEntity(request, user);
 
         // 4. 출연 기록 생성
-        FairyAppearance appearance = FairyAppearance.builder()
+        FairyParticipation appearance = FairyParticipation.builder()
                 .fairy(fairy)
                 .fairyTale(fairyTale)
                 .build();

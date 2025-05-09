@@ -35,10 +35,16 @@ public class Fairy extends BaseEntity {
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<FairyAppearance> appearances = new ArrayList<>(); // 요정의 출연 기록들
+    private List<FairyParticipation> appearances = new ArrayList<>(); // 요정의 출연 기록들
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FairyLine> lines = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FairyImage> images = new ArrayList<>();
 
     @Builder
-    public Fairy(Long id, String name, String personality, String appearance, User user, List<FairyAppearance> appearances,
+    public Fairy(Long id, String name, String personality, String appearance, User user, List<FairyParticipation> appearances,
                  Integer age, Gender gender) {
         this.id = id;
         this.name = name;
