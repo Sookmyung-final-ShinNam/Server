@@ -1,5 +1,6 @@
 package com.example.demo.domain.converter.fairy;
 
+import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.entity.base.User;
 import com.example.demo.entity.base.Fairy;
@@ -8,6 +9,15 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FairyConverter {
+
+    public Fairy toEntity(FairyInfoRequest request, User user) {
+        return Fairy.builder()
+                .name(request.getName())
+                .age(request.getAge())
+                .gender(Gender.fromString(request.getGender()))
+                .user(user)
+                .build();
+    }
 
     public Fairy toEntity(FairyRequest request, User user) {
         return Fairy.builder()
@@ -19,5 +29,4 @@ public class FairyConverter {
                 .user(user)
                 .build();
     }
-
 }

@@ -8,6 +8,6 @@ import java.util.List;
 public interface FairyRepository extends JpaRepository<Fairy, Long> {
 
     // 특정 유저가 만든 모든 요정을 조회
-    List<Fairy> findAllByUser_UserId(String userId);
+    List<Fairy> findAllByUserUsername(String username);
 
 }

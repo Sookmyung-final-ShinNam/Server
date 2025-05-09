@@ -37,10 +37,10 @@ public class Fairy extends BaseEntity {
     @JsonManagedReference
     private List<FairyParticipation> appearances = new ArrayList<>(); // 요정의 출연 기록들
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FairyLine> lines = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FairyImage> images = new ArrayList<>();
 
     @Builder

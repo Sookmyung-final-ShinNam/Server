@@ -6,6 +6,7 @@ import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
 import com.example.demo.domain.converter.fairy.FairyConverter;
 import com.example.demo.domain.converter.fairyTale.FairyTaleConverter;
+import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.fairy.FairyResponse;
 import com.example.demo.entity.base.*;
@@ -39,9 +40,21 @@ public class FairyServiceImpl implements FairyService {
 
     @Override
     @Transactional
-    public ApiResponse createFairy(String userId, FairyRequest request) {
+    public ApiResponse createFairyInfo(String username, FairyInfoRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        Fairy fairy = fairyConverter.toEntity(request, user);
+        fairy = fairyRepository.save(fairy);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_CREATED, fairy);
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse createFairy(String username, FairyRequest request) {
         // 1. 사용자 조회
-        User user = userRepository.findByUserId(userId)
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         // 2. 요정 엔티티 생성 (컨버터 사용)
@@ -80,8 +93,8 @@ public class FairyServiceImpl implements FairyService {
     }
 
     @Override
-    public ApiResponse<?> getMyFairies(String userId) {
-        List<Fairy> fairies = fairyRepository.findAllByUser_UserId(userId);
+    public ApiResponse<?> getMyFairies(String username) {
+        List<Fairy> fairies = fairyRepository.findAllByUserUsername(username);
         return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
     }
 

@@ -1,6 +1,6 @@
 domain: "192.168.35.88"
-base-url: "http://172.20.10.184:8080"
-redirect-url: "http://172.20.10.184:8080/swagger-ui/index.html"
+base-url: "http://192.168.35.88:8080"
+redirect-url: "http://192.168.35.88:8080/swagger-ui/index.html"
 
 withdrawn:
   delete-time: 60
@@ -28,18 +28,20 @@ spring:
 
   # jpa
   jpa:
+    generate-ddl: true
     hibernate:
       ddl-auto: update
     properties:
       hibernate:
         format_sql: true
         use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
     security:
       enable-csrf: false
 
   # jwt
   jwt:
-    secret: "hadgfsfsfsfsssfsfssfsfsfsffasadad1234567890"
+    secret: "aGFkZ2ZzZnNmc2Zzc3Nmc2Zzc2ZzZnNmc2ZmYXNhZGFkMTIzNDU2Nzg5MA=="
     expiration:
       access-token: 3600  # 1 day
       refresh-token: 604800  # 7 days
@@ -51,8 +53,8 @@ spring:
 
         registration:
           kakao:
-            client-id: 37554c0b8db2e9fa62a7e27d8d6b83a8
-            client-secret: dX47boukVk1VE2GCvoBl1BE3YbnTwZyS
+            client-id: cd8c576773dc1f53138ee8335964dcfa
+            client-secret: bZXQ5IDTnAojtPf83TcJR9fDn7H6ylWY
             authorization-grant-type: authorization_code
             redirect-uri: ${base-url}/authorization/oauth2/code/kakao
             scope:

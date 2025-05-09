@@ -78,6 +78,8 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
         String tokenUri = null;
+        String accessToken = null;
+        String refreshToken = null;
 
         if (path.equals(kakaoRedirectUri)) {
             tokenUri = kakaoTokenUri;
@@ -114,7 +116,7 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(tokenResponse.getBody());
-                String accessToken = jsonNode.get("access_token").asText();
+                accessToken = jsonNode.get("access_token").asText();
 
                 UserInfo user = null;
                 if (provider.equals("kakao")) {
@@ -123,11 +125,12 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
 
                 // 사용자 이메일로 회원가입 또는 로그인 처리
                 String returnToken = "";
-                if (userRepository.findByUserId(user.getEmail()).isPresent()) {
+                if (userRepository.findByUsername(user.getEmail()).isPresent()) {
 
                     // 재로그인 ( 활성화 상태로 설정하고 새로운 토큰 생성, 만일 탈퇴 상태였다면 탈퇴 시간 삭제 )
-                    Token token = tokenRepository.findByUser(userRepository.findByUserId(user.getEmail()).get())
+                    Token token = tokenRepository.findByUser(userRepository.findByUsername(user.getEmail()).get())
                             .orElseThrow(() -> new CustomException(ErrorStatus.TOKEN_NOT_FOUND));
+                    refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
                     token.setAccessToken(jwtUtil.generateAccessToken(user.getEmail()));
                     token.setRefreshToken(jwtUtil.generateRefreshToken(user.getEmail()));
                     token.setUpdatedAt(LocalDateTime.now());
@@ -142,12 +145,12 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
 
                 } else {
                     // 회원가입
-                    String userName = user.getName();
+                    String nickname = user.getName();
 
                     // 유저 객체 생성
                     User newUser = User.builder()
-                            .userId(user.getEmail())
-                            .userName(userName)
+                            .username(user.getEmail())
+                            .nickname(nickname)
                             .provider(user.getProvider())
                             .active(Status.ACTIVE)  // 기본적으로 ACTIVE로 설정
                             .build();
@@ -155,7 +158,7 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
                     userRepository.save(newUser); // 유저 DB에 저장
 
                     accessToken = jwtUtil.generateAccessToken(user.getEmail());
-                    String refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
+                    refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
 
                     Token token = tokenConverter.toEntity(accessToken, refreshToken, newUser);
                     token.setCreatedAt(LocalDateTime.now());
@@ -167,7 +170,7 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
                 }
 
                 // 프론트로 리다이렉트 -> 리프레쉬 토큰 포함
-                String redirectUrl = String.format("%s?token=%s", redirectBaseUrl, returnToken);
+                String redirectUrl = String.format("%s?accessToken=%s&refreshToken=%s", redirectBaseUrl, accessToken, refreshToken);
                 response.setStatus(HttpServletResponse.SC_FOUND);
                 response.setHeader("Location", redirectUrl);
 

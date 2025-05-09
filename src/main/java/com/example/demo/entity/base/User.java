@@ -38,6 +38,7 @@ public class User extends UserRelations {
 
     // 포인트
     @Column(nullable = false)
+    @Builder.Default
     private Integer point = 0;
 
     // active 는 3개 ( 활성 = 로그인, 비활성 = 로그아웃, 탈퇴 = 일정시간 이상 지속시 자동으로 회원 정보 삭제 ) 중 하나
