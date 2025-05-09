@@ -1,6 +1,7 @@
 package com.example.demo.entity.base;
 
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.entity.enums.Type;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -27,6 +28,18 @@ public class FairyTale extends BaseEntity {
     private String content;
 
     private String question;
+
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
+    @NonNull
+    private String background;
+
+    @NonNull
+    private String theme1;
+
+    private String theme2;
+    private String theme3;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
