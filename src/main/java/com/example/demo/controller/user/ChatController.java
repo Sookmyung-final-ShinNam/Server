@@ -35,36 +35,12 @@ public class ChatController extends BaseController {
         return chatService.generateNext(userId, request);
     }
 
-
-/*
-    // 1. 비속어 교정
-    @PostMapping("/correct-answer")
-    public ApiResponse correctUserAnswer(@RequestBody UserAnswerCorrectionRequest request) {
+    // 4. 상황 기반으로 사용자 답변 피드백
+    @PostMapping("/provide-feedback")
+    public ApiResponse provideFeedback(@RequestBody FeedbackRequest request) {
         String userId = getCurrentUserId();
-        return chatService.correctUserAnswer(userId, request, "correct_user_answer.json");
+        return chatService.provideFeedback(userId, request);
     }
 
-    // 2. 유의미한 단어 추출
-    @PostMapping("/analyze-text")
-    public ApiResponse analyzeUserText(@RequestBody UserTextAnalysisRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.analyzeUserText(userId, request, "find_significant_words.json");
-    }
-
-    // 3. 이야기 흐름에 맞는 피드백
-    @PostMapping("/story-feedback")
-    public ApiResponse provideStoryFeedback(@RequestBody StoryFeedbackRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.provideStoryFeedback(userId, request, "story_context_helper_prompt.json");
-    }
-
-    // 7. 주인공 특징 요약
-    @PostMapping("/generate-protagonist-summary")
-    public ApiResponse generateProtagonistSummary(@RequestBody ProtagonistSummaryRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.generateProtagonistSummary(userId, request, "fairytale_character_summary.json");
-    }
-
- */
 
 }

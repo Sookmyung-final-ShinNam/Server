@@ -4,6 +4,6 @@ import lombok.Getter;
 
 @Getter
 public class StoryRequest {
-    private String content;
+    private String fairyTaleNum;
     private String nowTry;
 }

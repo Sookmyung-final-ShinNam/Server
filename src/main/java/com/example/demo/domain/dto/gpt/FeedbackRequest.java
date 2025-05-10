@@ -5,10 +5,10 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class StoryFeedbackRequest {
+public class FeedbackRequest {
 
-    private String context;
     private String fairyTaleNum;
+    private String tryNum;
     private String userAnswer;
 
 }

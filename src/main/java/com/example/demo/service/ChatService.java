@@ -12,20 +12,7 @@ public interface ChatService {
 
     ApiResponse generateNext(String userId, StoryRequest request);
 
+    ApiResponse provideFeedback(String userId, FeedbackRequest request);
 
-
-
-
-    ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName);
-
-    ApiResponse analyzeUserText(String userId, UserTextAnalysisRequest request, String promptFileName);
-
-    ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName);
-
-    ApiResponse provideStoryNext(String userId, StoryFeedbackRequest request, String promptFileName);
-
-    ApiResponse generateFairyEnding(String userId, FairyEndingRequest request, String promptFileName);
-
-    ApiResponse generateProtagonistSummary(String userId, ProtagonistSummaryRequest request, String promptFileName);
 
 }
