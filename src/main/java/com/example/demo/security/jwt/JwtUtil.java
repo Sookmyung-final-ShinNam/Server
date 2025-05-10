@@ -160,17 +160,17 @@ public class JwtUtil {
     }
 
     // 3. 사용자 활성 상태 확인 메서드
-    private boolean isActiveUser(String username) {
-        return userRepository.findByUsername(username)
+    private boolean isActiveUser(String email) {
+        return userRepository.findByEmail(email)
                 .map(user -> Status.ACTIVE.equals(user.getActive())) // "ACTIVE" 상태 확인
-                .orElse(false); // username이 없으면 false 반환
+                .orElse(false); // email이 없으면 false 반환
     }
 
     // 4. 사용자 탈퇴 상태 확인 메서드
-    private boolean isDeletedUser(String username) {
-        return userRepository.findByUsername(username)
+    private boolean isDeletedUser(String email) {
+        return userRepository.findByEmail(email)
                 .map(user -> Status.WITHDRAWN.equals(user.getActive())) // "WITHDRAWN" 상태 확인
-                .orElse(true); // username이 없으면 true 반환, 즉 탈퇴 상태로 간주
+                .orElse(true); // email이 없으면 true 반환, 즉 탈퇴 상태로 간주
     }
 
     // 5. 토큰이 데이터베이스에 존재하는지 확인하는 메서드

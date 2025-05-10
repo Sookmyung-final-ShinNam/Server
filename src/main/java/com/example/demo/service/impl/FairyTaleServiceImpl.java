@@ -21,14 +21,14 @@ public class FairyTaleServiceImpl implements FairyTaleService {
     }
 
     @Override
-    public ApiResponse<?> getMyFairyTales(String userId) {
-        List<FairyTale> fairyTales = fairyTaleRepository.findAllByUserUsername(userId);
+    public ApiResponse<?> getMyFairyTales(String email) {
+        List<FairyTale> fairyTales = fairyTaleRepository.findAllByUserEmail(email);
         return ApiResponse.of(SuccessStatus.FAIRY_TALE_LIST_RETRIEVED, fairyTales);
     }
 
     @Override
-    public ApiResponse<?> updateFairyTaleContent(String userId, Long fairyTaleId, String content) {
-        FairyTale fairyTale = fairyTaleRepository.findByIdAndUserUsername(fairyTaleId, userId)
+    public ApiResponse<?> updateFairyTaleContent(String email, Long fairyTaleId, String content) {
+        FairyTale fairyTale = fairyTaleRepository.findByIdAndUserEmail(fairyTaleId, email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
         // 기존 내용에 추가
@@ -40,8 +40,8 @@ public class FairyTaleServiceImpl implements FairyTaleService {
     }
 
     @Override
-    public ApiResponse<?> getFairyTaleContent(String userId, Long fairyTaleId) {
-        FairyTale fairyTale = fairyTaleRepository.findByIdAndUserUsername(fairyTaleId, userId)
+    public ApiResponse<?> getFairyTaleContent(String email, Long fairyTaleId) {
+        FairyTale fairyTale = fairyTaleRepository.findByIdAndUserEmail(fairyTaleId, email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
         return ApiResponse.of(SuccessStatus.FAIRY_TALE_CONTENT_RETRIEVED, fairyTale.getContent());

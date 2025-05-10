@@ -22,8 +22,8 @@ public class UserServiceImpl implements UserService {
 
     // 1. 로그아웃 API
     @Override
-    public ApiResponse<?> logout(String username) {
-        User user = userRepository.findByUsername(username)
+    public ApiResponse<?> logout(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         user.deactivate(); // 비활성화 상태로 설정
@@ -34,8 +34,8 @@ public class UserServiceImpl implements UserService {
 
     // 2. 회원탈퇴 API
     @Override
-    public ApiResponse<?> deleteUser(String username) {
-        User user = userRepository.findByUsernameAndActive(username, Status.ACTIVE)
+    public ApiResponse<?> deleteUser(String email) {
+        User user = userRepository.findByEmailAndActive(email, Status.ACTIVE)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         user.withdraw(); // 탈퇴 상태로 설정 & 탈퇴 시간 기록 ( 탈퇴 시간 이후로 일정 시간 이상 지나면 모든 정보가 삭제됨 -> 스케줄링 적용 )

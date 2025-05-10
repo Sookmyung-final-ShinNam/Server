@@ -25,7 +25,7 @@ public class User extends UserRelations {
 
     // 이메일 - 30자 이내, 고유하게 설정
     @Column(nullable = false, length = 30, unique = true)
-    private String username;
+    private String email;
 
     // 닉네임 - 20자 이내
     @Column(nullable = false, length = 20)

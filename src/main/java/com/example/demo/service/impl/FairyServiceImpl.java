@@ -40,8 +40,8 @@ public class FairyServiceImpl implements FairyService {
 
     @Override
     @Transactional
-    public ApiResponse createFairyInfo(String username, FairyInfoRequest request) {
-        User user = userRepository.findByUsername(username)
+    public ApiResponse createFairyInfo(String email, FairyInfoRequest request) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         Fairy fairy = fairyConverter.toEntity(request, user);
@@ -52,9 +52,9 @@ public class FairyServiceImpl implements FairyService {
 
     @Override
     @Transactional
-    public ApiResponse createFairy(String username, FairyRequest request) {
+    public ApiResponse createFairy(String email, FairyRequest request) {
         // 1. 사용자 조회
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         // 2. 요정 엔티티 생성 (컨버터 사용)
@@ -93,8 +93,8 @@ public class FairyServiceImpl implements FairyService {
     }
 
     @Override
-    public ApiResponse<?> getMyFairies(String username) {
-        List<Fairy> fairies = fairyRepository.findAllByUserUsername(username);
+    public ApiResponse<?> getMyFairies(String email) {
+        List<Fairy> fairies = fairyRepository.findAllByUserEmail(email);
         return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
     }
 

@@ -125,10 +125,10 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
 
                 // 사용자 이메일로 회원가입 또는 로그인 처리
                 String returnToken = "";
-                if (userRepository.findByUsername(user.getEmail()).isPresent()) {
+                if (userRepository.findByEmail(user.getEmail()).isPresent()) {
 
                     // 재로그인 ( 활성화 상태로 설정하고 새로운 토큰 생성, 만일 탈퇴 상태였다면 탈퇴 시간 삭제 )
-                    Token token = tokenRepository.findByUser(userRepository.findByUsername(user.getEmail()).get())
+                    Token token = tokenRepository.findByUser(userRepository.findByEmail(user.getEmail()).get())
                             .orElseThrow(() -> new CustomException(ErrorStatus.TOKEN_NOT_FOUND));
                     refreshToken = jwtUtil.generateRefreshToken(user.getEmail());
                     token.setAccessToken(jwtUtil.generateAccessToken(user.getEmail()));
@@ -149,7 +149,7 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
 
                     // 유저 객체 생성
                     User newUser = User.builder()
-                            .username(user.getEmail())
+                            .email(user.getEmail())
                             .nickname(nickname)
                             .provider(user.getProvider())
                             .active(Status.ACTIVE)  // 기본적으로 ACTIVE로 설정
