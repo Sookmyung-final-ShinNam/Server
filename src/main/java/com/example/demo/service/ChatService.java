@@ -6,6 +6,16 @@ import com.example.demo.domain.dto.gpt.*;
 
 public interface ChatService {
 
+    ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName);
+
+    ApiResponse generateQuestion(String userId, StoryRequest request);
+
+    ApiResponse generateNext(String userId, StoryRequest request);
+
+
+
+
+
     ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName);
 
     ApiResponse analyzeUserText(String userId, UserTextAnalysisRequest request, String promptFileName);
@@ -13,10 +23,6 @@ public interface ChatService {
     ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName);
 
     ApiResponse provideStoryNext(String userId, StoryFeedbackRequest request, String promptFileName);
-
-    ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName);
-
-    ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName);
 
     ApiResponse generateFairyEnding(String userId, FairyEndingRequest request, String promptFileName);
 
