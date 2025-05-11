@@ -52,7 +52,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
     // 요정 관련 에러
     FAIRY_INVALID_GENDER(HttpStatus.BAD_REQUEST, "FAIRY_4001", "유효하지 않은 요정 성별입니다. GEDNER: MALE, FEMALE"),
-    FAIRY_CREATE_FAILED(HttpStatus.BAD_REQUEST, "FAIRY_4002", "요정 생성에 실패하였습니다. 매개변수 확인");
+    FAIRY_CREATE_FAILED(HttpStatus.BAD_REQUEST, "FAIRY_4002", "요정 생성에 실패하였습니다. 매개변수 확인"),
+    FAIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "FAIRY_4003", "해당 요정을 찾을 수 없습니다.");
 
 
     private final HttpStatus httpStatus;

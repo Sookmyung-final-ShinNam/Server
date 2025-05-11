@@ -28,4 +28,12 @@ public class FairyController extends BaseController {
         return fairyService.getMyFairies(userId, gender);
     }
 
+    // 나의 요정 조회
+    @GetMapping("/{fairyId}")
+    public ApiResponse<?> getMyFairy(@RequestParam Long fairyId) {
+        String userId = getCurrentUserId();
+        return fairyService.getMyFairy(userId, fairyId);
+    }
+
+
 }

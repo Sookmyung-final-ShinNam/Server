@@ -95,10 +95,23 @@ public class FairyServiceImpl implements FairyService {
 
     // 사용자 요정 조회
     @Override
+    public ApiResponse<?> getMyFairy(String email, Long fairyId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        Fairy fairy = fairyRepository.findById(fairyId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+
+        return ApiResponse.of(SuccessStatus.FAIRY_RETRIEVED, fairy);
+    }
+
+    // 사용자 요정 목록 조회
+    @Override
     public ApiResponse<?> getMyFairies(String email, String gender) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         List<Fairy> fairies;
-
         if (gender.equalsIgnoreCase("all")) {
             // 전체 성별 조회
             fairies = fairyRepository.findAllByUserEmail(email);
