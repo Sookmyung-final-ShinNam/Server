@@ -10,6 +10,7 @@ import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.fairy.FairyResponse;
 import com.example.demo.entity.base.*;
+import com.example.demo.entity.enums.Gender;
 import com.example.demo.repository.*;
 import com.example.demo.service.FairyService;
 import org.springframework.stereotype.Service;
@@ -92,10 +93,27 @@ public class FairyServiceImpl implements FairyService {
         return ApiResponse.of(SuccessStatus.FAIRY_CREATED, response);
     }
 
+    // 사용자 요정 조회
     @Override
-    public ApiResponse<?> getMyFairies(String email) {
-        List<Fairy> fairies = fairyRepository.findAllByUserEmail(email);
+    public ApiResponse<?> getMyFairies(String email, String gender) {
+
+        List<Fairy> fairies;
+
+        if (gender.equalsIgnoreCase("all")) {
+            // 전체 성별 조회
+            fairies = fairyRepository.findAllByUserEmail(email);
+        } else {
+            try {
+                // MALE, FEMALE인 경우
+                Gender selctedGender = Gender.valueOf(gender.toUpperCase());
+                fairies = fairyRepository.findAllByUserEmailAndGender(email, selctedGender);
+
+            } catch (IllegalArgumentException e) {
+                // 그 외 입력한 경우
+                return ApiResponse.onFailure(ErrorStatus.FAIRY_INVALID_GENDER, null);
+            }
+        }
+
         return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
     }
-
 }

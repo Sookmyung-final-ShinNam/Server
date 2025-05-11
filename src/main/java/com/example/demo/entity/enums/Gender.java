@@ -10,7 +10,7 @@ public enum Gender {
         try {
             return Gender.valueOf(value.toUpperCase());
         } catch (Exception e) {
-            throw new CustomException(ErrorStatus.FAIRY_CREATE_FAILED);
+            throw new CustomException(ErrorStatus.FAIRY_INVALID_GENDER);
         }
     }
 }

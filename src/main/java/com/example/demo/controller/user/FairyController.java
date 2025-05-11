@@ -23,9 +23,9 @@ public class FairyController extends BaseController {
 
     // 나의 요정 목록 조회
     @GetMapping
-    public ApiResponse<?> getMyFairies() {
+    public ApiResponse<?> getMyFairies(@RequestParam(defaultValue = "all") String gender) {
         String userId = getCurrentUserId();
-        return fairyService.getMyFairies(userId);
+        return fairyService.getMyFairies(userId, gender);
     }
 
 }

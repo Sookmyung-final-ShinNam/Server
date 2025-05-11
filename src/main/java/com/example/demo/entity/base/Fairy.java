@@ -26,6 +26,7 @@ public class Fairy extends BaseEntity {
     private Integer age;         // 요정 나이
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Gender gender;       // 요정 성별
 
     @ManyToOne
