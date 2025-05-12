@@ -1,0 +1,86 @@
+domain: "10.101.39.216"
+base-url: "http://10.101.39.216:8080"
+redirect-url: "http://10.101.39.216:8080/swagger-ui/index.html"
+
+withdrawn:
+  delete-time: 60
+  check-time: 30
+
+server:
+  port: 8080
+
+
+# spring
+spring:
+  web:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  time-zone: Asia/Seoul
+
+  # DB
+  datasource:
+    url: jdbc:mysql://localhost:3306/final
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # jpa
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+    security:
+      enable-csrf: false
+
+  # jwt
+  jwt:
+    secret: "aGFkZ2ZzZnNmc2Zzc3Nmc2Zzc2ZzZnNmc2ZmYXNhZGFkMTIzNDU2Nzg5MA=="
+    expiration:
+      access-token: 3600  # 1 day
+      refresh-token: 604800  # 7 days
+
+  security:
+    oauth2:
+      client:
+        kakao-path-uri: "/authorization/oauth2/code/kakao"
+
+        registration:
+          kakao:
+            client-id: cd8c576773dc1f53138ee8335964dcfa
+            client-secret: bZXQ5IDTnAojtPf83TcJR9fDn7H6ylWY
+            authorization-grant-type: authorization_code
+            redirect-uri: ${base-url}/authorization/oauth2/code/kakao
+            scope:
+              - account_email
+              - profile_nickname
+            client-name: Kakao
+            client-authentication-method: client_secret_post
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+chatgpt:
+  api-key: "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"
+
+# 카카오페이 API
+kakao:
+  base-url: "${base-url}" # 백엔드 경로
+  redirect-url: "${base-url}/paySuccess.html" # 프로트엔드 경로 ( 결제 성공 이후 돌아갈 곳 )
+  domain: "${domain}" # 백엔드 도메인
+  pay:
+    cid: "TC0ONETIME"
+    secretKey: "DEV8222F6BD683D7210AC42BFA60EAE3DC32DEB0"
+    approvalUrl: "${base-url}/api/permit/payment/approve" # 결제 승인시 리다이렉트 url
+    cancelUrl: "${base-url}/api/permit/payment/cancel" # 결제 취소시 리다이렉트 url
+    failUrl: "${base-url}/api/permit/payment/fail" # 결제 실패시 리다이렉트 url

@@ -9,8 +9,8 @@ import java.util.Optional;
 public interface FairyTaleRepository extends JpaRepository<FairyTale, Long> {
 
     // 특정 유저가 만든 모든 동화를 조회
-    List<FairyTale> findAllByUser_UserId(String userId);
+    List<FairyTale> findAllByUserEmail(String email);
 
-    Optional<FairyTale> findByIdAndUser_UserId(Long id, String userId);
+    Optional<FairyTale> findByIdAndUserEmail(Long id, String email);
 
 }

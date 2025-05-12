@@ -197,7 +197,7 @@ public class ChatServiceImpl implements ChatService {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Authorization", "Bearer " + apiKey);
-            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("Content-TaleType", "application/json");
             conn.setDoOutput(true);
 
             // 🔎 프롬프트 로그 출력

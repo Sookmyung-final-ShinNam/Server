@@ -37,7 +37,7 @@ public class KakaoUserInfo {
                     responseBody.split("email\":\"")[1].split("\"")[0] : "이메일 없음";
 
             // 이미 있는 사용자인지 분석
-            if (userRepository.findByUserId(email).isPresent()) {
+            if (userRepository.findByEmail(email).isPresent()) {
                 return new UserInfo(nickname, email, Provider.KAKAO, "Login");
             } else {
                 return new UserInfo(nickname, email, Provider.KAKAO, "SignUP");

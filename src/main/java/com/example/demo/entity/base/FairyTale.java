@@ -1,6 +1,7 @@
 package com.example.demo.entity.base;
 
 import com.example.demo.entity.BaseEntity;
+import com.example.demo.entity.enums.Type;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "faryTale")
 public class FairyTale extends BaseEntity {
 
     @Id
@@ -28,6 +30,20 @@ public class FairyTale extends BaseEntity {
 
     private String question;
 
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
+    private Boolean isFavorite;
+
+    @NonNull
+    private String background;
+
+    @NonNull
+    private String theme1;
+
+    private String theme2;
+    private String theme3;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference
@@ -36,6 +52,9 @@ public class FairyTale extends BaseEntity {
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonManagedReference
-    private List<FairyAppearance> appearances = new ArrayList<>();
+    private List<FairyParticipation> participations = new ArrayList<>();
 
+    @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Page> pages = new ArrayList<>();
 }

@@ -6,9 +6,9 @@ import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
 import com.example.demo.domain.converter.fairy.FairyConverter;
 import com.example.demo.domain.converter.fairyTale.FairyTaleConverter;
-import com.example.demo.domain.dto.fairy.FairyRequest;
-import com.example.demo.domain.dto.fairy.FairyResponse;
+import com.example.demo.domain.dto.fairy.*;
 import com.example.demo.entity.base.*;
+import com.example.demo.entity.enums.Gender;
 import com.example.demo.repository.*;
 import com.example.demo.service.FairyService;
 import org.springframework.stereotype.Service;
@@ -39,9 +39,21 @@ public class FairyServiceImpl implements FairyService {
 
     @Override
     @Transactional
-    public ApiResponse createFairy(String userId, FairyRequest request) {
+    public ApiResponse createFairyInfo(String email, FairyInfoRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        Fairy fairy = fairyConverter.toEntity(request, user);
+        fairy = fairyRepository.save(fairy);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_CREATED, fairy);
+    }
+
+    @Override
+    @Transactional
+    public ApiResponse createFairy(String email, FairyRequest request) {
         // 1. 사용자 조회
-        User user = userRepository.findByUserId(userId)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         // 2. 요정 엔티티 생성 (컨버터 사용)
@@ -51,14 +63,14 @@ public class FairyServiceImpl implements FairyService {
         FairyTale fairyTale = fairyTaleConverter.toEntity(request, user);
 
         // 4. 출연 기록 생성
-        FairyAppearance appearance = FairyAppearance.builder()
+        FairyParticipation participation = FairyParticipation.builder()
                 .fairy(fairy)
                 .fairyTale(fairyTale)
                 .build();
 
         // 5. 관계 설정
-        fairy.getAppearances().add(appearance);
-        fairyTale.getAppearances().add(appearance);
+        fairy.getParticipations().add(participation);
+        fairyTale.getParticipations().add(participation);
 
         // 6. 저장
         fairyRepository.save(fairy);
@@ -79,10 +91,55 @@ public class FairyServiceImpl implements FairyService {
         return ApiResponse.of(SuccessStatus.FAIRY_CREATED, response);
     }
 
+    // 캐릭터 섞어서 동화 생성
     @Override
-    public ApiResponse<?> getMyFairies(String userId) {
-        List<Fairy> fairies = fairyRepository.findAllByUser_UserId(userId);
-        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
+    @Transactional
+    public ApiResponse createFairyMix(String email, FairyMixRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        // TODO: id로부터 요정정보 넘겨줌
+        // TODO: 동화책만들어지면서 매핑
+        return ApiResponse.of(SuccessStatus.FAIRY_CREATED, null);
     }
 
+    // 사용자 요정 조회
+    @Override
+    public ApiResponse<?> getMyFairy(String email, Long fairyId) {
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        Fairy fairy = fairyRepository.findById(fairyId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+
+        MyFairyResponse response = FairyConverter.toMyFairyResponse(fairy);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_RETRIEVED, response);
+    }
+
+    // 사용자 요정 목록 조회
+    @Override
+    public ApiResponse<?> getMyFairies(String email, String gender) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        List<Fairy> fairies;
+        if (gender.equalsIgnoreCase("all")) {
+            // 전체 성별 조회
+            fairies = fairyRepository.findAllByUserEmail(email);
+        } else {
+            try {
+                // MALE, FEMALE인 경우
+                Gender selctedGender = Gender.valueOf(gender.toUpperCase());
+                fairies = fairyRepository.findAllByUserEmailAndGender(email, selctedGender);
+
+            } catch (IllegalArgumentException e) {
+                // 그 외 입력한 경우
+                return ApiResponse.onFailure(ErrorStatus.FAIRY_INVALID_GENDER, null);
+            }
+        }
+
+        List<FairyInfoResponse> fairyInfos = FairyConverter.toFairyInfoResponseList(fairies);
+        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairyInfos);
+    }
 }

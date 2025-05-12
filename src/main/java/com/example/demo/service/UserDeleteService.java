@@ -33,7 +33,7 @@ public class UserDeleteService {
             LocalDateTime now = LocalDateTime.now();
 
             // deleteTimeMillis 이상 탈퇴 상태인 사용자 조회
-            List<User> withdrawnUsers = userRepository.findByActiveAndWithdrawTimeBefore(
+            List<User> withdrawnUsers = userRepository.findByActiveAndWithdrawAtBefore(
                     Status.WITHDRAWN,
                     now.minusSeconds(deleteTimeMillis / 1000)
             );

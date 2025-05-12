@@ -64,10 +64,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throwException(ErrorStatus.TOKEN_INVALID_ACCESS_TOKEN);
             }
 
-            String userId = jwtUtil.extractUserIdFromToken(token);
+            String email = jwtUtil.extractUserIdFromToken(token);
 
             // 유저가 존재하는지 확인
-            User user = userRepository.findByUserId(userId)
+            User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> {
                         try {
                             throwException(ErrorStatus.USER_NOT_FOUND);
@@ -98,7 +98,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 사용자 인증 처리
             UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userId, null, null);
+                    new UsernamePasswordAuthenticationToken(email, null, null);
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
         } catch (Exception e) {
