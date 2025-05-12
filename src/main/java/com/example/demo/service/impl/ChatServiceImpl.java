@@ -51,15 +51,20 @@ public class ChatServiceImpl implements ChatService {
     public ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName) {
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
+        String userSetting = String.format(
+                "**사용자 설정 : 테마: %s, 배경: %s, 주인공: 이름=%s, 성별=%s, 나이=%d세, 헤어컬러=%s, 눈 색=%s, 헤어스타일=%s**",
+                request.getThemes(),
+                request.getBackgrounds(),
+                request.getName(),
+                request.getGender(),
+                request.getAge(),
+                request.getHairColor(),
+                request.getEyeColor(),
+                request.getHairStyle()
+        );
+
         String body = bodyTemplate
-                .replace("{themes}", request.getThemes())
-                .replace("{backgrounds}", request.getBackgrounds())
-                .replace("{name}", request.getName())
-                .replace("{gender}", request.getGender())
-                .replace("{age}", String.valueOf(request.getAge()))
-                .replace("{hair_color}", request.getHairColor())
-                .replace("{eye_color}", request.getEyeColor())
-                .replace("{hair_style}", request.getHairStyle());
+                .replace("{guiSetting}", userSetting);
 
         String answer = callChatGpt(body);
 
@@ -186,7 +191,7 @@ public class ChatServiceImpl implements ChatService {
 
 
     // 공통 부분 : gpt 호출
-    private String callChatGpt(String userMessage) {
+    private String callChatGpt(String finalPromptJson) {
         try {
             URL url = new URL("https://api.openai.com/v1/chat/completions");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -195,42 +200,34 @@ public class ChatServiceImpl implements ChatService {
             conn.setRequestProperty("Content-TaleType", "application/json");
             conn.setDoOutput(true);
 
-            // JSON 요청 본문 구성
-            ObjectMapper mapper = new ObjectMapper();
-            ObjectNode requestBody = mapper.createObjectNode();
-            requestBody.put("model", "gpt-3.5-turbo");
+            // 🔎 프롬프트 로그 출력
+            System.out.println("🔎 전달된 프롬프트(JSON):\n" + finalPromptJson);
 
-            ArrayNode messages = mapper.createArrayNode();
-            ObjectNode userMessageNode = mapper.createObjectNode();
-            userMessageNode.put("role", "user");
-            userMessageNode.put("content", userMessage); // 여기서 큰따옴표 자동 이스케이프 처리됨
-            messages.add(userMessageNode);
-
-            requestBody.set("messages", messages);
-
-            // 객체를 JSON 문자열로 직렬화
-            String json = mapper.writeValueAsString(requestBody);
-
-            // 요청 전송
+            // JSON 본문 전송
             try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = json.getBytes(StandardCharsets.UTF_8);
+                byte[] input = finalPromptJson.getBytes(StandardCharsets.UTF_8);
                 os.write(input, 0, input.length);
             }
 
             // 응답 읽기
             try (BufferedReader br = new BufferedReader(
                     new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+
                 StringBuilder response = new StringBuilder();
                 String line;
                 while ((line = br.readLine()) != null) {
                     response.append(line.trim());
                 }
 
+                // JSON 파싱 및 응답 내용 추출
+                ObjectMapper mapper = new ObjectMapper();
                 JsonNode jsonNode = mapper.readTree(response.toString());
+
                 return jsonNode.get("choices").get(0).get("message").get("content").asText();
             }
 
         } catch (IOException e) {
+            // 예외 처리 (사용자 정의 예외로 감쌈)
             throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
         }
     }
