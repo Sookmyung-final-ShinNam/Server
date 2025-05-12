@@ -6,9 +6,7 @@ import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
 import com.example.demo.domain.converter.fairy.FairyConverter;
 import com.example.demo.domain.converter.fairyTale.FairyTaleConverter;
-import com.example.demo.domain.dto.fairy.FairyInfoRequest;
-import com.example.demo.domain.dto.fairy.FairyRequest;
-import com.example.demo.domain.dto.fairy.FairyResponse;
+import com.example.demo.domain.dto.fairy.*;
 import com.example.demo.entity.base.*;
 import com.example.demo.entity.enums.Gender;
 import com.example.demo.repository.*;
@@ -65,14 +63,14 @@ public class FairyServiceImpl implements FairyService {
         FairyTale fairyTale = fairyTaleConverter.toEntity(request, user);
 
         // 4. 출연 기록 생성
-        FairyParticipation appearance = FairyParticipation.builder()
+        FairyParticipation participation = FairyParticipation.builder()
                 .fairy(fairy)
                 .fairyTale(fairyTale)
                 .build();
 
         // 5. 관계 설정
-        fairy.getAppearances().add(appearance);
-        fairyTale.getAppearances().add(appearance);
+        fairy.getParticipations().add(participation);
+        fairyTale.getParticipations().add(participation);
 
         // 6. 저장
         fairyRepository.save(fairy);
@@ -93,16 +91,30 @@ public class FairyServiceImpl implements FairyService {
         return ApiResponse.of(SuccessStatus.FAIRY_CREATED, response);
     }
 
+    // 캐릭터 섞어서 동화 생성
+    @Override
+    @Transactional
+    public ApiResponse createFairyMix(String email, FairyMixRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        // TODO: id로부터 요정정보 넘겨줌
+        // TODO: 동화책만들어지면서 매핑
+        return ApiResponse.of(SuccessStatus.FAIRY_CREATED, null);
+    }
+
     // 사용자 요정 조회
     @Override
     public ApiResponse<?> getMyFairy(String email, Long fairyId) {
-        User user = userRepository.findByEmail(email)
+        userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         Fairy fairy = fairyRepository.findById(fairyId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
 
-        return ApiResponse.of(SuccessStatus.FAIRY_RETRIEVED, fairy);
+        MyFairyResponse response = FairyConverter.toMyFairyResponse(fairy);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_RETRIEVED, response);
     }
 
     // 사용자 요정 목록 조회
@@ -127,6 +139,7 @@ public class FairyServiceImpl implements FairyService {
             }
         }
 
-        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
+        List<FairyInfoResponse> fairyInfos = FairyConverter.toFairyInfoResponseList(fairies);
+        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairyInfos);
     }
 }

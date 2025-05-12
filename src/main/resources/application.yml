@@ -1,6 +1,6 @@
-domain: "192.168.35.88"
-base-url: "http://192.168.35.88:8080"
-redirect-url: "http://192.168.35.88:8080/swagger-ui/index.html"
+domain: "10.101.39.216"
+base-url: "http://10.101.39.216:8080"
+redirect-url: "http://10.101.39.216:8080/swagger-ui/index.html"
 
 withdrawn:
   delete-time: 60

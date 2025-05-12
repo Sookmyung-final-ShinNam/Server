@@ -3,7 +3,9 @@ package com.example.demo.controller.user;
 import com.example.demo.base.ApiResponse;
 import com.example.demo.controller.BaseController;
 import com.example.demo.domain.dto.fairy.FairyInfoRequest;
+import com.example.demo.domain.dto.fairy.FairyMixRequest;
 import com.example.demo.service.FairyService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,11 +23,10 @@ public class FairyController extends BaseController {
         return fairyService.createFairyInfo(userId, request);
     }
 
-    // 나의 요정 목록 조회
-    @GetMapping
-    public ApiResponse<?> getMyFairies(@RequestParam(defaultValue = "all") String gender) {
+    @PostMapping("/mix")
+    public ApiResponse<?> createFairyMix(@RequestBody @Valid FairyMixRequest request) {
         String userId = getCurrentUserId();
-        return fairyService.getMyFairies(userId, gender);
+        return fairyService.createFairyMix(userId, request);
     }
 
     // 나의 요정 조회
@@ -35,5 +36,10 @@ public class FairyController extends BaseController {
         return fairyService.getMyFairy(userId, fairyId);
     }
 
-
+    // 나의 요정 목록 조회
+    @GetMapping
+    public ApiResponse<?> getMyFairies(@RequestParam(defaultValue = "all") String gender) {
+        String userId = getCurrentUserId();
+        return fairyService.getMyFairies(userId, gender);
+    }
 }

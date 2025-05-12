@@ -29,6 +29,8 @@ public class Fairy extends BaseEntity {
     @Column(nullable = false)
     private Gender gender;       // 요정 성별
 
+    private Boolean isFavorite;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     @JsonBackReference
@@ -36,7 +38,7 @@ public class Fairy extends BaseEntity {
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<FairyParticipation> appearances = new ArrayList<>(); // 요정의 출연 기록들
+    private List<FairyParticipation> participations = new ArrayList<>(); // 요정의 출연 기록들
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FairyLine> lines = new ArrayList<>();
@@ -45,7 +47,7 @@ public class Fairy extends BaseEntity {
     private List<FairyImage> images = new ArrayList<>();
 
     @Builder
-    public Fairy(Long id, String name, String personality, String appearance, User user, List<FairyParticipation> appearances,
+    public Fairy(Long id, String name, String personality, String appearance, User user, List<FairyParticipation> participations,
                  Integer age, Gender gender) {
         this.id = id;
         this.name = name;
@@ -54,7 +56,7 @@ public class Fairy extends BaseEntity {
         this.user = user;
         this.age = age;
         this.gender = gender;
-        this.appearances = (appearances != null) ? appearances : new ArrayList<>();  // appearances 리스트 초기화
+        this.participations = (participations != null) ? participations : new ArrayList<>();  // appearances 리스트 초기화
     }
 
 }

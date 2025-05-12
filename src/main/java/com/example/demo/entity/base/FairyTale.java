@@ -33,6 +33,8 @@ public class FairyTale extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private Type type;
 
+    private Boolean isFavorite;
+
     @NonNull
     private String background;
 
@@ -50,7 +52,7 @@ public class FairyTale extends BaseEntity {
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @JsonManagedReference
-    private List<FairyParticipation> appearances = new ArrayList<>();
+    private List<FairyParticipation> participations = new ArrayList<>();
 
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
