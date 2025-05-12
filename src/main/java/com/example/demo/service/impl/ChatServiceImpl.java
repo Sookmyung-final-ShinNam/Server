@@ -5,7 +5,6 @@ import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
 import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
-import com.example.demo.domain.dto.FairyTale.FairyTaleGenerateQuesetionResponse;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.gpt.*;
 import com.example.demo.entity.base.FairyTale;
@@ -16,6 +15,8 @@ import com.example.demo.service.FairyTaleService;
 import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,113 +46,6 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private FairyTaleService fairyTaleService;
 
-    @Override
-    public ApiResponse correctUserAnswer(String userId, UserAnswerCorrectionRequest request, String promptFileName) {
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
-        String body = bodyTemplate
-                .replace("{user_answer}", request.getUserAnswer());
-
-        String answer = callChatGpt(body);
-
-        // 결과 저장 및 응답 처리
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
-    }
-
-    @Override
-    public ApiResponse analyzeUserText(String userId, UserTextAnalysisRequest request, String promptFileName) {
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
-        String body = bodyTemplate
-                .replace("{user_answer}", request.getUserAnswer());
-
-        String answer = callChatGpt(body);
-
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
-    }
-
-    private static final int MAX_RETRY = 3;
-    @Override
-    public ApiResponse provideStoryNext(String userId, StoryFeedbackRequest request, String promptFileName) {
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
-        // 동화 번호로 FairyTale 엔티티 조회
-        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
-
-        String body = bodyTemplate
-                .replace("{context}", request.getContext()+fairyTale.getQuestion())
-                .replace("{user_answer}", request.getUserAnswer());
-
-        String answer = null;
-        boolean isAppropriateAnswer = false;
-        String result = null;
-
-        for (int i = 0; i < MAX_RETRY; i++) {
-            answer = callChatGpt(body).trim();
-            log.debug("GPT 응답: {}", answer); // 전체 GPT 응답 로그 출력
-
-            // '맞아. 하지만 이렇게 바꾸면 적절해줘!'가 포함되어 있는지 확인
-            int startIdx = answer.indexOf("맞아. 이렇게 바꾸면 더 적절해!");
-            if (startIdx != -1) {
-                isAppropriateAnswer = true;
-                result = answer.substring(startIdx).trim();
-                break;
-            }
-        }
-
-        log.debug("최종 분석 전 결과: {}", result);
-
-        // 재시도 후에도 실패한 경우
-        if (result == null) {
-            result = "이야기 흐름을 확인하고 있어. 잠시 후 다시 시도해줘!";
-            isAppropriateAnswer = false;
-        }
-
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
-    }
-
-    @Override
-    public ApiResponse provideStoryFeedback(String userId, StoryFeedbackRequest request, String promptFileName) {
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
-        // 동화 번호로 FairyTale 엔티티 조회
-        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
-
-        String body = bodyTemplate
-                .replace("{context}", request.getContext()+fairyTale.getQuestion())
-                .replace("{user_answer}", request.getUserAnswer());
-
-        String answer = null;
-        boolean isAppropriateAnswer = false;
-        String result = null;
-
-        for (int i = 0; i < MAX_RETRY; i++) {
-            answer = callChatGpt(body).trim();
-
-            if (answer.startsWith("맞아")) {
-                isAppropriateAnswer = true;
-                result = answer.substring(4).trim();
-                break;
-            } else if (answer.startsWith("아니야")) {
-                isAppropriateAnswer = false;
-                result = answer.substring(5).trim();
-                break;
-            }
-
-        }
-
-        log.debug("최종 분석 전 결과: {}", result);
-
-        // 재시도 후에도 실패한 경우
-        if (result == null) {
-            result = "이야기 흐름을 확인하고 있어. 잠시 후 다시 시도해줘!";
-            isAppropriateAnswer = false;
-        }
-
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
-    }
 
     @Override
     public ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName) {
@@ -169,57 +63,130 @@ public class ChatServiceImpl implements ChatService {
 
         String answer = callChatGpt(body);
 
-        // 양끝의 따옴표를 제거
-        if (answer.startsWith("\"") && answer.endsWith("\"")) {
-            answer = answer.substring(1, answer.length() - 1);
-        }
-
         String title = String.format("주제: %s, 배경: %s", request.getThemes(), request.getBackgrounds());
         String appearance = String.format("성별: %s, 나이: %d, 머리 색상: %s, 눈 색상: %s, 머리스타일: %s",
                 request.getGender(), request.getAge(), request.getHairColor(), request.getEyeColor(), request.getHairStyle());
 
         FairyRequest fairyRequest = FairyRequest.builder()
                 .name(request.getName())
-                .personality("착함")
+                .personality("미정")
                 .appearance(appearance)
                 .title(title)
                 .content(answer)
                 .build();
 
-        // 이미 ApiResponse 타입이라면 바로 반환
         return fairyService.createFairy(userId, fairyRequest);
     }
 
     @Override
-    public ApiResponse generateQuestion(String userId, StoryQuestionRequest request, String promptFileName) {
-        // prompt 템플릿 로딩
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+    public ApiResponse generateQuestion(String userId, StoryRequest request) {
 
-        log.debug("generateQuestion 호출 - userId: {}, fairyTaleNum: {}, promptFileName: {}", userId, request.getFairyTaleNum(), promptFileName);
+        String promptFileName = "question_num1.json";
+        switch (request.getNowTry()) {
+            case "2":
+                promptFileName = "question_num2.json";
+                break;
+            case "3":
+                promptFileName = "question_num3.json";
+                break;
+            case "4":
+                promptFileName = "question_num4.json";
+                break;
+        }
+
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         // 동화 번호로 FairyTale 엔티티 조회
         FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
         // 동화의 content를 situation으로 설정
-        String body = bodyTemplate.replace("{situation}", fairyTale.getContent());
+        String body = bodyTemplate
+                .replace("{situation}", fairyTale.getContent());
 
         // GPT 호출
         String answer = callChatGpt(body);
 
-        // 임시 저장
-        fairyTale.setQuestion(answer);
-        fairyTaleRepository.save(fairyTale);
+        fairyTaleService.updateFairyTaleContent(userId, Long.valueOf(request.getFairyTaleNum()), answer);
 
-        // 객체 반환
-        FairyTaleGenerateQuesetionResponse response = new FairyTaleGenerateQuesetionResponse(answer, fairyTale.getContent());
-
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
 
     }
 
+    @Override
+    public ApiResponse generateNext(String userId, StoryRequest request) {
+
+        String promptFileName = "nextStory_num1.json";
+        switch (request.getNowTry()) {
+            case "2":
+                promptFileName = "nextStory_num2.json";
+                break;
+            case "3":
+                promptFileName = "nextStory_num3.json";
+                break;
+            case "4":
+                promptFileName = "nextStory_num4.json";
+                break;
+        }
+
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        // 동화 번호로 FairyTale 엔티티 조회
+        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+
+        // 동화의 content를 situation으로 설정
+        String body = bodyTemplate
+                .replace("{situation}", fairyTale.getContent());
+
+        // GPT 호출
+        String answer = callChatGpt(body);
+
+        fairyTaleService.updateFairyTaleContent(userId, Long.valueOf(request.getFairyTaleNum()), answer);
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+
+    }
+
+    @Override
+    public ApiResponse provideFeedback(String userId, FeedbackRequest request) {
+
+        var promptFileName = "feedback_base_userAnswer.json";
+        if (request.getTryNum().equals("3"))
+            promptFileName = "feedback_make_next.json";
+        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
+
+        // 동화 번호로 FairyTale 엔티티 조회
+        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+
+        String body = bodyTemplate
+                .replace("{situation}", fairyTale.getContent())
+                .replace("{user_answer}", request.getUserAnswer());
+
+        // GPT 호출
+        String answer = callChatGpt(body);
+
+        boolean isAppropriateAnswer = false;
+        String result = null;
+
+        log.debug("최종 분석 전 결과: {}", answer);
+
+        if (answer.startsWith("맞아")) {
+            isAppropriateAnswer = true;
+            result = answer.substring(4).trim();
+            fairyTaleService.updateFairyTaleContent(userId, Long.valueOf(request.getFairyTaleNum()), answer);
+        } else if (answer.startsWith("아니야")) {
+            isAppropriateAnswer = false;
+            result = answer.substring(5).trim();
+        }
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
+    }
+
+
     // 공통 부분 : gpt 호출
-    private String callChatGpt(String body) {
+    private String callChatGpt(String userMessage) {
         try {
             URL url = new URL("https://api.openai.com/v1/chat/completions");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -228,11 +195,29 @@ public class ChatServiceImpl implements ChatService {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
 
+            // JSON 요청 본문 구성
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode requestBody = mapper.createObjectNode();
+            requestBody.put("model", "gpt-3.5-turbo");
+
+            ArrayNode messages = mapper.createArrayNode();
+            ObjectNode userMessageNode = mapper.createObjectNode();
+            userMessageNode.put("role", "user");
+            userMessageNode.put("content", userMessage); // 여기서 큰따옴표 자동 이스케이프 처리됨
+            messages.add(userMessageNode);
+
+            requestBody.set("messages", messages);
+
+            // 객체를 JSON 문자열로 직렬화
+            String json = mapper.writeValueAsString(requestBody);
+
+            // 요청 전송
             try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = body.getBytes(StandardCharsets.UTF_8);
+                byte[] input = json.getBytes(StandardCharsets.UTF_8);
                 os.write(input, 0, input.length);
             }
 
+            // 응답 읽기
             try (BufferedReader br = new BufferedReader(
                     new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                 StringBuilder response = new StringBuilder();
@@ -241,7 +226,6 @@ public class ChatServiceImpl implements ChatService {
                     response.append(line.trim());
                 }
 
-                ObjectMapper mapper = new ObjectMapper();
                 JsonNode jsonNode = mapper.readTree(response.toString());
                 return jsonNode.get("choices").get(0).get("message").get("content").asText();
             }
@@ -251,44 +235,5 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    @Override
-    public ApiResponse<?> generateFairyEnding(String userId, FairyEndingRequest request, String promptFileName) {
-        // 프롬프트 템플릿 로드
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
-        // 동화 콘텐츠 불러오기
-        ApiResponse<?> response = fairyTaleService.getFairyTaleContent(userId, request.getFairyTaleNum());
-        // 동화 콘텐츠 추출
-        String content = (String) response.getResult();
-
-        // 프롬프트 본문 구성
-        String body = bodyTemplate.replace("{situation}", content);
-        // ChatGPT API 호출하여 결말 생성
-        String answer = callChatGpt(body);
-
-        // 생성된 결말로 동화 업데이트
-        return fairyTaleService.updateFairyTaleContent(userId, request.getFairyTaleNum(), answer);
-
-    }
-
-    @Override
-    public ApiResponse generateProtagonistSummary(String userId, ProtagonistSummaryRequest request, String promptFileName) {
-        // 프롬프트 템플릿 로드
-        String bodyTemplate = promptLoader.loadPrompt(promptFileName);
-
-        // 동화 콘텐츠 불러오기
-        ApiResponse<?> response = fairyTaleService.getFairyTaleContent(userId, request.getFairyTaleNum());
-        // 동화 콘텐츠 추출
-        String content = (String) response.getResult();
-
-        // 템플릿에 삽입
-        String body = bodyTemplate.replace("{situation}", content);
-
-        // ChatGPT API 호출하여 주인공 특징 요약 생성
-        String answer = callChatGpt(body);
-
-        // 생성된 요약 반환
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
-    }
 
 }

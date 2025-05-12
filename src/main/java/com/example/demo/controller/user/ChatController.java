@@ -3,7 +3,6 @@ package com.example.demo.controller.user;
 import com.example.demo.base.ApiResponse;
 import com.example.demo.controller.BaseController;
 import com.example.demo.domain.dto.gpt.*;
-import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
 import com.example.demo.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,60 +14,33 @@ public class ChatController extends BaseController {
 
     private final ChatService chatService;
 
-    // 1. 비속어 교정
-    @PostMapping("/correct-answer")
-    public ApiResponse correctUserAnswer(@RequestBody UserAnswerCorrectionRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.correctUserAnswer(userId, request, "correct_user_answer.json");
-    }
-
-    // 2. 유의미한 단어 추출
-    @PostMapping("/analyze-text")
-    public ApiResponse analyzeUserText(@RequestBody UserTextAnalysisRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.analyzeUserText(userId, request, "find_significant_words.json");
-    }
-
-    // 3. 이야기 흐름에 맞는 피드백
-    @PostMapping("/story-feedback")
-    public ApiResponse provideStoryFeedback(@RequestBody StoryFeedbackRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.provideStoryFeedback(userId, request, "story_context_helper_prompt.json");
-    }
-
-    // 3. 이야기 흐름에 맞는 다음 이야기
-    @PostMapping("/story-next")
-    public ApiResponse provideStoryNext(@RequestBody StoryFeedbackRequest request) {
-        String userId = getCurrentUserId();
-        return chatService.provideStoryNext(userId, request, "story_context_helper_end.json");
-    }
-
-    // 4. 이야기 시작 문장 생성
+    // 1. 이야기 시작 문장 생성
     @PostMapping("/generate-story-intro")
     public ApiResponse generateStoryIntro(@RequestBody StoryIntroRequest request) {
         String userId = getCurrentUserId();
-        return chatService.generateStoryIntro(userId, request, "story_intro_prompt.json");
+        return chatService.generateStoryIntro(userId, request, "gui_base_story_intro.json");
     }
 
-    // 5. 상황 기반 질문 생성
+    // 2. 상황 기반 질문 생성
     @PostMapping("/generate-question")
-    public ApiResponse generateQuestion(@RequestBody StoryQuestionRequest request) {
+    public ApiResponse generateQuestion(@RequestBody StoryRequest request) {
         String userId = getCurrentUserId();
-        return chatService.generateQuestion(userId, request, "generate_story_question_prompt.json");
+        return chatService.generateQuestion(userId, request);
     }
 
-    // 6. 상황 기반 엔딩 생성
-    @PostMapping("/generate-fairy-ending")
-    public ApiResponse generateFairyEnding(@RequestBody FairyEndingRequest request) {
+    // 3. 상황 기반 다음 이야기 생성
+    @PostMapping("/generate-next")
+    public ApiResponse generateNext(@RequestBody StoryRequest request) {
         String userId = getCurrentUserId();
-        return chatService.generateFairyEnding(userId, request, "fairytale_endings_prompt.json");
+        return chatService.generateNext(userId, request);
     }
 
-    // 7. 주인공 특징 요약
-    @PostMapping("/generate-protagonist-summary")
-    public ApiResponse generateProtagonistSummary(@RequestBody ProtagonistSummaryRequest request) {
+    // 4. 상황 기반으로 사용자 답변 피드백
+    @PostMapping("/provide-feedback")
+    public ApiResponse provideFeedback(@RequestBody FeedbackRequest request) {
         String userId = getCurrentUserId();
-        return chatService.generateProtagonistSummary(userId, request, "fairytale_character_summary.json");
+        return chatService.provideFeedback(userId, request);
     }
+
 
 }
