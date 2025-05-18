@@ -13,6 +13,7 @@ import com.example.demo.service.ChatService;
 import com.example.demo.service.FairyService;
 import com.example.demo.service.FairyTaleService;
 import com.example.demo.util.PromptLoader;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -136,6 +137,9 @@ public class ChatServiceImpl implements ChatService {
 
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
+        // 🔎 프롬프트 로그 출력
+        System.out.println("🔎 현재 번호 :\n" + request.getNowTry());
+
         // 동화 번호로 FairyTale 엔티티 조회
         FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
@@ -155,6 +159,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ApiResponse provideFeedback(String userId, FeedbackRequest request) {
+
+        // 🔎 프롬프트 로그 출력
+        System.out.println("🔎 현재 번호 :\n" + request.getTryNum());
 
         var promptFileName = "feedback_base_userAnswer.json";
         if (request.getTryNum().equals("3"))
@@ -203,10 +210,24 @@ public class ChatServiceImpl implements ChatService {
             // 🔎 프롬프트 로그 출력
             System.out.println("🔎 전달된 프롬프트(JSON):\n" + finalPromptJson);
 
-            // JSON 본문 전송
+            // JSON 문자열 유효성 체크를 위해 ObjectMapper 사용
+            ObjectMapper mapper = new ObjectMapper();
+
+            JsonNode validatedJson = null;
+            try {
+                validatedJson = mapper.readTree(finalPromptJson); // JSON 파싱으로 유효성 검증
+            } catch (JsonProcessingException e) {
+                System.err.println("JSON 파싱 오류 발생: " + e.getMessage());
+                e.printStackTrace(); // JSON 처리 중 에러 발생 시 디버깅용
+                throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST);
+            }
+
+            // JSON이 잘 파싱되었으면 안전한 JSON 문자열로 변환
+            String safeJson = mapper.writeValueAsString(validatedJson); // 자동 이스케이프 처리됨
+            System.out.println("🔎 안전하게 변환된 JSON:\n" + safeJson);
+
             try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = finalPromptJson.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
+                os.write(safeJson.getBytes(StandardCharsets.UTF_8)); // 안전하게 write
             }
 
             // 응답 읽기
@@ -219,18 +240,14 @@ public class ChatServiceImpl implements ChatService {
                     response.append(line.trim());
                 }
 
-                // JSON 파싱 및 응답 내용 추출
-                ObjectMapper mapper = new ObjectMapper();
                 JsonNode jsonNode = mapper.readTree(response.toString());
-
                 return jsonNode.get("choices").get(0).get("message").get("content").asText();
             }
 
         } catch (IOException e) {
-            // 예외 처리 (사용자 정의 예외로 감쌈)
+            e.printStackTrace(); // 디버깅 용도
             throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
         }
     }
-
 
 }
