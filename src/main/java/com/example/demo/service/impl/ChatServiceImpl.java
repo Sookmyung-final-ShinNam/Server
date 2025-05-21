@@ -10,6 +10,7 @@ import com.example.demo.entity.enums.Gender;
 import com.example.demo.entity.enums.Type;
 import com.example.demo.repository.FairyRepository;
 import com.example.demo.repository.FairyTaleRepository;
+import com.example.demo.repository.PageRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.FairyService;
@@ -28,6 +29,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -41,19 +43,17 @@ public class ChatServiceImpl implements ChatService {
     private String apiKey;
 
     @Autowired
-    private FairyService fairyService;
+    private UserRepository userRepository;
+
 
     @Autowired
-    private UserRepository userRepository;
+    private PageRepository pageRepository;
 
     @Autowired
     private FairyTaleRepository fairyTaleRepository;
 
     @Autowired
     private FairyRepository fairyRepository;
-
-    @Autowired
-    private FairyTaleService fairyTaleService;
 
 
     @Override
@@ -144,119 +144,125 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ApiResponse generateQuestion(String userId, StoryRequest request) {
-
-        String promptFileName = "question_num1.json";
-        switch (request.getNowTry()) {
-            case "2":
-                promptFileName = "question_num2.json";
-                break;
-            case "3":
-                promptFileName = "question_num3.json";
-                break;
-            case "4":
-                promptFileName = "question_num4.json";
-                break;
-        }
-
+        String promptFileName = getPromptFileName("question_num", request.getNowTry());
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
-        // 동화 번호로 FairyTale 엔티티 조회
-        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+        FairyTale fairyTale = getFairyTaleOrThrow(request.getFairyTaleNum());
+        String combinedContent = buildCombinedContent(fairyTale);
 
-        // 동화의 content를 situation으로 설정
-        String body = bodyTemplate
-                .replace("{situation}", fairyTale.getContent());
-
-        // GPT 호출
+        String body = bodyTemplate.replace("{situation}", combinedContent);
         String answer = callChatGpt(body);
 
-        fairyTaleService.updateFairyTaleContent(userId, Long.valueOf(request.getFairyTaleNum()), answer);
+        savePageWithField(fairyTale, "question", answer);
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
-
     }
 
     @Override
     public ApiResponse generateNext(String userId, StoryRequest request) {
-
-        String promptFileName = "nextStory_num1.json";
-        switch (request.getNowTry()) {
-            case "2":
-                promptFileName = "nextStory_num2.json";
-                break;
-            case "3":
-                promptFileName = "nextStory_num3.json";
-                break;
-            case "4":
-                promptFileName = "nextStory_num4.json";
-                break;
-        }
-
+        String promptFileName = getPromptFileName("nextStory_num", request.getNowTry());
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
-        // 🔎 프롬프트 로그 출력
-        System.out.println("🔎 현재 번호 :\n" + request.getNowTry());
+        log.info("🔎 현재 번호 : {}", request.getNowTry());
 
-        // 동화 번호로 FairyTale 엔티티 조회
-        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+        FairyTale fairyTale = getFairyTaleOrThrow(request.getFairyTaleNum());
+        String combinedContent = buildCombinedContent(fairyTale);
 
-        // 동화의 content를 situation으로 설정
-        String body = bodyTemplate
-                .replace("{situation}", fairyTale.getContent());
-
-        // GPT 호출
+        String body = bodyTemplate.replace("{situation}", combinedContent);
         String answer = callChatGpt(body);
 
-        fairyTaleService.updateFairyTaleContent(userId, Long.valueOf(request.getFairyTaleNum()), answer);
+        savePageWithField(fairyTale, "plot", answer);
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
-
     }
 
     @Override
     public ApiResponse provideFeedback(String userId, FeedbackRequest request) {
+        log.info("🔎 현재 번호 : {}", request.getTryNum());
 
-        // 🔎 프롬프트 로그 출력
-        System.out.println("🔎 현재 번호 :\n" + request.getTryNum());
-
-        var promptFileName = "feedback_base_userAnswer.json";
-        if (request.getTryNum().equals("3"))
-            promptFileName = "feedback_make_next.json";
+        String promptFileName = request.getTryNum().equals("3")
+                ? "feedback_make_next.json"
+                : "feedback_base_userAnswer.json";
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
-        // 동화 번호로 FairyTale 엔티티 조회
-        FairyTale fairyTale = fairyTaleRepository.findById(Long.parseLong(request.getFairyTaleNum()))
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+        FairyTale fairyTale = getFairyTaleOrThrow(request.getFairyTaleNum());
+        String combinedContent = buildCombinedContent(fairyTale);
 
         String body = bodyTemplate
-                .replace("{situation}", fairyTale.getContent())
+                .replace("{situation}", combinedContent)
                 .replace("{user_answer}", request.getUserAnswer());
 
-        // GPT 호출
         String answer = callChatGpt(body);
 
-        boolean isAppropriateAnswer = false;
-        String result = null;
-
         log.debug("최종 분석 전 결과: {}", answer);
+
+        boolean isAppropriateAnswer = false;
+        String result;
 
         if (answer.startsWith("맞아")) {
             isAppropriateAnswer = true;
             result = answer.substring(4).trim();
-            fairyTaleService.updateFairyTaleContent(userId, Long.valueOf(request.getFairyTaleNum()), answer);
+            savePageWithField(fairyTale, "answer", answer);
         } else if (answer.startsWith("아니야")) {
             isAppropriateAnswer = false;
             result = answer.substring(5).trim();
+        } else {
+            result = answer;
         }
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, new StoryFeedbackResult(result, isAppropriateAnswer));
     }
 
 
+    // 공통 부분
+    private String getPromptFileName(String baseName, String nowTry) {
+        return switch (nowTry) {
+            case "2" -> baseName + "2.json";
+            case "3" -> baseName + "3.json";
+            case "4" -> baseName + "4.json";
+            default -> baseName + "1.json";
+        };
+    }
+
+    private FairyTale getFairyTaleOrThrow(String fairyTaleNum) {
+        return fairyTaleRepository.findById(Long.parseLong(fairyTaleNum))
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+    }
+
+    private String buildCombinedContent(FairyTale fairyTale) {
+        List<Page> pages = pageRepository.findByFairyTaleOrderByIdAsc(fairyTale);
+
+        StringBuilder combinedContent = new StringBuilder();
+        for (Page page : pages) {
+            if (page.getQuestion() != null) {
+                combinedContent.append("질문: ").append(page.getQuestion()).append("\n");
+            }
+            if (page.getAnswer() != null) {
+                combinedContent.append("답변: ").append(page.getAnswer()).append("\n");
+            }
+            if (page.getPlot() != null) {
+                combinedContent.append("줄거리: ").append(page.getPlot()).append("\n");
+            }
+        }
+        return combinedContent.toString();
+    }
+
+    private void savePageWithField(FairyTale fairyTale, String field, String content) {
+        Page nextPage = new Page();
+        nextPage.setFairyTale(fairyTale);
+        switch (field) {
+            case "question" -> nextPage.setQuestion(content);
+            case "answer" -> nextPage.setAnswer(content);
+            case "plot" -> nextPage.setPlot(content);
+            default -> throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST);
+        }
+        pageRepository.save(nextPage);
+    }
+
+
+
     // 공통 부분 : gpt 호출
-    private String callChatGpt(String finalPromptJson) {
+    public String callChatGpt(String finalPromptJson) {
         HttpURLConnection conn = null;
         try {
             URL url = new URL("https://api.openai.com/v1/chat/completions");
@@ -266,70 +272,44 @@ public class ChatServiceImpl implements ChatService {
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
 
-            // 🔎 프롬프트 로그 출력
-            System.out.println("🔎 전달된 프롬프트(JSON):\n" + finalPromptJson);
 
-            // JSON 문자열 유효성 체크
+            // ✅ JSON 문자열이 유효한지 파싱해서 확인 (선택적 유효성 체크)
             ObjectMapper mapper = new ObjectMapper();
-            JsonNode validatedJson;
             try {
-                validatedJson = mapper.readTree(finalPromptJson);
+                // 줄바꿈 문자 제거 (가장 안전한 방식)
+                finalPromptJson = finalPromptJson.replaceAll("[\\n\\r]+", " ");
+                System.out.println("🔎 전달된 프롬프트(JSON):\n" + finalPromptJson);
+
+                JsonNode requestNode = mapper.readTree(finalPromptJson);
+                System.out.println("✅ JSON 파싱 성공: " + requestNode.toPrettyString());
             } catch (JsonProcessingException e) {
-                System.err.println("JSON 파싱 오류 발생: " + e.getMessage());
-                e.printStackTrace();
-                throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST);
+                System.err.println("❌ JSON 파싱 실패: " + e.getMessage());
+                throw new CustomException(ErrorStatus.JSON_PARSE_ERROR);
             }
 
-            String safeJson = mapper.writeValueAsString(validatedJson);
-            System.out.println("🔎 안전하게 변환된 JSON:\n" + safeJson);
+            System.out.println("✅ JSON 형식 확인 완료");
 
+            // ✅ JSON 그대로 전송
             try (OutputStream os = conn.getOutputStream()) {
-                os.write(safeJson.getBytes(StandardCharsets.UTF_8));
+                byte[] input = finalPromptJson.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
             }
 
-            // 응답 코드 확인
-            int responseCode = conn.getResponseCode();
-            if (responseCode != 200) {
-                try (BufferedReader errorReader = new BufferedReader(
-                        new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder errorResponse = new StringBuilder();
-                    String line;
-                    while ((line = errorReader.readLine()) != null) {
-                        errorResponse.append(line.trim());
-                    }
-                    System.err.println("GPT 호출 실패 응답: " + errorResponse);
-                }
-                throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
-            }
-
-            // 정상 응답 처리
-            try (BufferedReader br = new BufferedReader(
-                    new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-
+            // ✅ 응답 받기
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                 StringBuilder response = new StringBuilder();
                 String line;
                 while ((line = br.readLine()) != null) {
                     response.append(line.trim());
                 }
 
-                JsonNode jsonNode = mapper.readTree(response.toString());
-                JsonNode choicesNode = jsonNode.get("choices");
-                if (choicesNode == null || !choicesNode.isArray() || choicesNode.size() == 0) {
-                    throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
-                }
-
-                return choicesNode.get(0).get("message").get("content").asText();
+                JsonNode responseJson = mapper.readTree(response.toString());
+                return responseJson.get("choices").get(0).get("message").get("content").asText();
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
             throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
-        } finally {
-            if (conn != null) {
-                conn.disconnect(); // 리소스 정리
-            }
         }
     }
-
 
 }

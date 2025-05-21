@@ -21,16 +21,6 @@ public class FairyTaleController extends BaseController {
         return fairyTaleService.getMyFairyTales(userId);
     }
 
-    // 특정 동화 내용 업데이트
-    @PutMapping("/{fairyTaleId}")
-    public ApiResponse<?> updateFairyTaleContent(
-            @PathVariable Long fairyTaleId,
-            @RequestBody FairyTaleUpdateRequest request
-    ) {
-        String userId = getCurrentUserId();
-        return fairyTaleService.updateFairyTaleContent(userId, fairyTaleId, request.getContent());
-    }
-
     // 특정 동화 내용 조회
     @GetMapping("/{fairyTaleId}")
     public ApiResponse<?> getFairyTaleContent(@PathVariable Long fairyTaleId) {

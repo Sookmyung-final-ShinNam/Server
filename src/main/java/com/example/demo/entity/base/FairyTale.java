@@ -28,8 +28,6 @@ public class FairyTale extends BaseEntity {
     @Lob
     private String content; // 줄거리 3줄 요약
 
-    private String question;
-
     @Enumerated(EnumType.STRING)
     private Type type;
 
