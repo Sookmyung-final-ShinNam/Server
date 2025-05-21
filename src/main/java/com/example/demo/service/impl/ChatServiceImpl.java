@@ -248,15 +248,29 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private void savePageWithField(FairyTale fairyTale, String field, String content) {
-        Page nextPage = new Page();
-        nextPage.setFairyTale(fairyTale);
+        Page targetPage;
+
+        if ("question".equals(field)) {
+            // question는 새로운 Page 생성
+            targetPage = new Page();
+            targetPage.setFairyTale(fairyTale);
+        } else {
+            // answer 또는 plot은 마지막 Page 수정
+            Optional<Page> optionalLastPage = pageRepository.findTopByFairyTaleOrderByIdDesc(fairyTale);
+            if (optionalLastPage.isEmpty()) {
+                throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST); // 마지막 페이지가 없으면 예외 처리
+            }
+            targetPage = optionalLastPage.get();
+        }
+
         switch (field) {
-            case "question" -> nextPage.setQuestion(content);
-            case "answer" -> nextPage.setAnswer(content);
-            case "plot" -> nextPage.setPlot(content);
+            case "question" -> targetPage.setQuestion(content);
+            case "answer" -> targetPage.setAnswer(content);
+            case "plot" -> targetPage.setPlot(content);
             default -> throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST);
         }
-        pageRepository.save(nextPage);
+
+        pageRepository.save(targetPage);
     }
 
 
