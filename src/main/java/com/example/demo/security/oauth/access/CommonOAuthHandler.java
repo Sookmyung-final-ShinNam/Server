@@ -170,7 +170,7 @@ public class CommonOAuthHandler extends OncePerRequestFilter {
                 }
 
                 // 프론트로 리다이렉트 -> 리프레쉬 토큰 포함
-                String redirectUrl = String.format("%s?accessToken=%s&refreshToken=%s", redirectBaseUrl, accessToken, refreshToken);
+                String redirectUrl = String.format("%s?token=%s", redirectBaseUrl, refreshToken);
                 response.setStatus(HttpServletResponse.SC_FOUND);
                 response.setHeader("Location", redirectUrl);
 
