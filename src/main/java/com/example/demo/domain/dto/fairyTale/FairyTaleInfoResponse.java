@@ -1,4 +1,4 @@
-package com.example.demo.domain.dto.FairyTale;
+package com.example.demo.domain.dto.fairyTale;
 
 import lombok.Builder;
 import lombok.Getter;

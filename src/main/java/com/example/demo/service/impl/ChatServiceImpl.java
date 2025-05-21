@@ -4,11 +4,13 @@ import com.example.demo.base.ApiResponse;
 import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.base.status.SuccessStatus;
-import com.example.demo.domain.dto.FairyTale.FairyEndingRequest;
-import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.gpt.*;
-import com.example.demo.entity.base.FairyTale;
+import com.example.demo.entity.base.*;
+import com.example.demo.entity.enums.Gender;
+import com.example.demo.entity.enums.Type;
+import com.example.demo.repository.FairyRepository;
 import com.example.demo.repository.FairyTaleRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.FairyService;
 import com.example.demo.service.FairyTaleService;
@@ -16,8 +18,6 @@ import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -43,13 +44,21 @@ public class ChatServiceImpl implements ChatService {
     private FairyService fairyService;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private FairyTaleRepository fairyTaleRepository;
+
+    @Autowired
+    private FairyRepository fairyRepository;
+
     @Autowired
     private FairyTaleService fairyTaleService;
 
 
     @Override
     public ApiResponse generateStoryIntro(String userId, StoryIntroRequest request, String promptFileName) {
+        // 1. GPT 프롬프트 생성 및 호출
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
 
         String userSetting = String.format(
@@ -64,25 +73,74 @@ public class ChatServiceImpl implements ChatService {
                 request.getHairStyle()
         );
 
-        String body = bodyTemplate
-                .replace("{guiSetting}", userSetting);
+        String body = bodyTemplate.replace("{guiSetting}", userSetting);
 
         String answer = callChatGpt(body);
 
-        String title = String.format("주제: %s, 배경: %s", request.getThemes(), request.getBackgrounds());
-        String appearance = String.format("성별: %s, 나이: %d, 머리 색상: %s, 눈 색상: %s, 머리스타일: %s",
-                request.getGender(), request.getAge(), request.getHairColor(), request.getEyeColor(), request.getHairStyle());
+        User user = userRepository.findByEmail(userId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
-        FairyRequest fairyRequest = FairyRequest.builder()
-                .name(request.getName())
-                .personality("미정")
-                .appearance(appearance)
-                .title(title)
-                .content(answer)
+        // 2. FairyTale 엔티티 생성
+        // 주제는 띄어쓰기로 분리하여 theme1, theme2, theme3 에 저장
+        String[] themes = request.getThemes().split("\\s+");
+        String theme1 = themes.length > 0 ? themes[0] : null;
+        String theme2 = themes.length > 1 ? themes[1] : null;
+        String theme3 = themes.length > 2 ? themes[2] : null;
+
+        FairyTale fairyTale = FairyTale.builder()
+                .background(request.getBackgrounds())
+                .type(Type.ONE)  // fairyTale.type 은 one 으로 고정
+                .theme1(theme1)
+                .theme2(theme2)
+                .theme3(theme3)
+                .user(user)
                 .build();
 
-        return fairyService.createFairy(userId, fairyRequest);
+        // 3. Fairy 엔티티 생성 및 저장
+        // appearance는 머리색상, 눈 색상, 머리스타일 띄어쓰기로 연결
+        String appearance = String.format("%s %s %s", request.getHairColor(), request.getEyeColor(), request.getHairStyle());
+
+        // Gender enum 변환 예시 (대문자 변환 필요할 수 있음)
+        Gender gender = Gender.valueOf(request.getGender().toUpperCase());
+
+        Fairy fairy = Fairy.builder()
+                .name(request.getName())
+                .age(request.getAge())
+                .gender(gender)
+                .appearance(appearance)
+                .user(user)
+                .build();
+
+        fairyRepository.save(fairy);
+
+        // 4. FairyParticipation 생성 및 양방향 연관관계 설정
+        FairyParticipation participation = FairyParticipation.builder()
+                .fairy(fairy)
+                .fairyTale(fairyTale)
+                .build();
+
+        // Fairy에 참여 기록 추가
+        fairy.getParticipations().add(participation);
+
+        // FairyTale에 참여 기록 추가
+        fairyTale.getParticipations().add(participation);
+
+        // 5. Page 생성 (answer 내용을 plot에 저장)
+        Page page = Page.builder()
+                .plot(answer)
+                .fairyTale(fairyTale)
+                .build();
+
+        // FairyTale에 페이지 추가
+        fairyTale.getPages().add(page);
+
+        // 6. DB 저장 (Repository 호출)
+        fairyTaleRepository.save(fairyTale);
+        // participation과 page는 cascade 옵션에 의해 저장됨
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
+
 
     @Override
     public ApiResponse generateQuestion(String userId, StoryRequest request) {
@@ -199,38 +257,52 @@ public class ChatServiceImpl implements ChatService {
 
     // 공통 부분 : gpt 호출
     private String callChatGpt(String finalPromptJson) {
+        HttpURLConnection conn = null;
         try {
             URL url = new URL("https://api.openai.com/v1/chat/completions");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Authorization", "Bearer " + apiKey);
-            conn.setRequestProperty("Content-TaleType", "application/json");
+            conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
 
             // 🔎 프롬프트 로그 출력
             System.out.println("🔎 전달된 프롬프트(JSON):\n" + finalPromptJson);
 
-            // JSON 문자열 유효성 체크를 위해 ObjectMapper 사용
+            // JSON 문자열 유효성 체크
             ObjectMapper mapper = new ObjectMapper();
-
-            JsonNode validatedJson = null;
+            JsonNode validatedJson;
             try {
-                validatedJson = mapper.readTree(finalPromptJson); // JSON 파싱으로 유효성 검증
+                validatedJson = mapper.readTree(finalPromptJson);
             } catch (JsonProcessingException e) {
                 System.err.println("JSON 파싱 오류 발생: " + e.getMessage());
-                e.printStackTrace(); // JSON 처리 중 에러 발생 시 디버깅용
+                e.printStackTrace();
                 throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST);
             }
 
-            // JSON이 잘 파싱되었으면 안전한 JSON 문자열로 변환
-            String safeJson = mapper.writeValueAsString(validatedJson); // 자동 이스케이프 처리됨
+            String safeJson = mapper.writeValueAsString(validatedJson);
             System.out.println("🔎 안전하게 변환된 JSON:\n" + safeJson);
 
             try (OutputStream os = conn.getOutputStream()) {
-                os.write(safeJson.getBytes(StandardCharsets.UTF_8)); // 안전하게 write
+                os.write(safeJson.getBytes(StandardCharsets.UTF_8));
             }
 
-            // 응답 읽기
+            // 응답 코드 확인
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                try (BufferedReader errorReader = new BufferedReader(
+                        new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = errorReader.readLine()) != null) {
+                        errorResponse.append(line.trim());
+                    }
+                    System.err.println("GPT 호출 실패 응답: " + errorResponse);
+                }
+                throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
+            }
+
+            // 정상 응답 처리
             try (BufferedReader br = new BufferedReader(
                     new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
 
@@ -241,13 +313,23 @@ public class ChatServiceImpl implements ChatService {
                 }
 
                 JsonNode jsonNode = mapper.readTree(response.toString());
-                return jsonNode.get("choices").get(0).get("message").get("content").asText();
+                JsonNode choicesNode = jsonNode.get("choices");
+                if (choicesNode == null || !choicesNode.isArray() || choicesNode.size() == 0) {
+                    throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
+                }
+
+                return choicesNode.get(0).get("message").get("content").asText();
             }
 
         } catch (IOException e) {
-            e.printStackTrace(); // 디버깅 용도
+            e.printStackTrace();
             throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
+        } finally {
+            if (conn != null) {
+                conn.disconnect(); // 리소스 정리
+            }
         }
     }
+
 
 }

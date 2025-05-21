@@ -26,7 +26,7 @@ public class FairyTale extends BaseEntity {
     private String title;
 
     @Lob
-    private String content;
+    private String content; // 줄거리 3줄 요약
 
     private String question;
 

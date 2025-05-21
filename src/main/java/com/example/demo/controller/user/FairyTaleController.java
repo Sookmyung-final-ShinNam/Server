@@ -5,7 +5,7 @@ import com.example.demo.controller.BaseController;
 import com.example.demo.service.FairyTaleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.example.demo.domain.dto.FairyTale.FairyTaleUpdateRequest;
+import com.example.demo.domain.dto.fairyTale.FairyTaleUpdateRequest;
 
 @RestController
 @RequestMapping("/api/fairy-tale")

@@ -49,47 +49,6 @@ public class FairyServiceImpl implements FairyService {
         return ApiResponse.of(SuccessStatus.FAIRY_CREATED, fairy);
     }
 
-    @Override
-    @Transactional
-    public ApiResponse createFairy(String email, FairyRequest request) {
-        // 1. 사용자 조회
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
-
-        // 2. 요정 엔티티 생성 (컨버터 사용)
-        Fairy fairy = fairyConverter.toEntity(request, user);
-
-        // 3. 동화 엔티티 생성 (컨버터 사용)
-        FairyTale fairyTale = fairyTaleConverter.toEntity(request, user);
-
-        // 4. 출연 기록 생성
-        FairyParticipation participation = FairyParticipation.builder()
-                .fairy(fairy)
-                .fairyTale(fairyTale)
-                .build();
-
-        // 5. 관계 설정
-        fairy.getParticipations().add(participation);
-        fairyTale.getParticipations().add(participation);
-
-        // 6. 저장
-        fairyRepository.save(fairy);
-        fairyTaleRepository.save(fairyTale);
-
-        // 7. 응답 DTO 생성
-        FairyResponse response = FairyResponse.builder()
-                .id(fairy.getId())
-                .name(fairy.getName())
-                .personality(fairy.getPersonality())
-                .appearance(fairy.getAppearance())
-                .fairyTaleId(fairyTale.getId())
-                .fairyTaleTitle(fairyTale.getTitle())
-                .fairyTaleContent(fairyTale.getContent())
-                .build();
-
-        // 8. 응답 반환
-        return ApiResponse.of(SuccessStatus.FAIRY_CREATED, response);
-    }
 
     // 캐릭터 섞어서 동화 생성
     @Override
