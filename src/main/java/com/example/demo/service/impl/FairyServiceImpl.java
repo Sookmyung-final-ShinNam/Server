@@ -152,4 +152,17 @@ public class FairyServiceImpl implements FairyService {
         List<Fairy> fairies = fairyRepository.findByUserAndIsFavorite(user, true);
         return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, FairyConverter.toFairyInfosResponse(fairies));
     }
+
+    // 요정 즐겨찾기 on/off
+    @Override
+    public ApiResponse<?> updateFavoriteStatus(String email, Long fairyId) {
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        Fairy fairy = fairyRepository.findById(fairyId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+
+//        fairy.getIsFavorite()
+        return null;
+    }
 }

@@ -56,8 +56,9 @@ public class FairyController extends BaseController {
 
     // 즐겨찾기 on/off
     @PatchMapping("/{fairyId}")
-    public ApiResponse<?> updateFairy(@RequestParam Long fairyId) {
-        return null;
+    public ApiResponse<?> updateFavoriteStatus(@RequestParam Long fairyId) {
+        String userId = getCurrentUserId();
+        return fairyService.updateFavoriteStatus(userId, fairyId);
     }
 
 }
