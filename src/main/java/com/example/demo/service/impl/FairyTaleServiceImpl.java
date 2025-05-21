@@ -27,19 +27,6 @@ public class FairyTaleServiceImpl implements FairyTaleService {
     }
 
     @Override
-    public ApiResponse<?> updateFairyTaleContent(String email, Long fairyTaleId, String content) {
-        FairyTale fairyTale = fairyTaleRepository.findByIdAndUserEmail(fairyTaleId, email)
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
-
-        // 기존 내용에 추가
-        fairyTale.setContent(fairyTale.getContent() + content); // 기존 내용 뒤에 새 내용 추가
-
-        fairyTaleRepository.save(fairyTale);
-
-        return ApiResponse.of(SuccessStatus.FAIRY_TALE_UPDATED, fairyTale);
-    }
-
-    @Override
     public ApiResponse<?> getFairyTaleContent(String email, Long fairyTaleId) {
         FairyTale fairyTale = fairyTaleRepository.findByIdAndUserEmail(fairyTaleId, email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));

@@ -16,10 +16,16 @@ public class Page {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 이미지 링크
+    // 한 장의 이미지 링크
     private String image;
 
-    // 줄거리
+    // 해당 장의 질문
+    private String question;
+
+    // 해당 장의 답변
+    private String answer;
+
+    // 한 장의 줄거리 (질문과 답변도 포함을 할까..?)
     private String plot;
 
     // 등장하는 동화

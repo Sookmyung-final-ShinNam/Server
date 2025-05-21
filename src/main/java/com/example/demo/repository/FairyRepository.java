@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.domain.dto.fairy.FairyInfoResponse;
+import com.example.demo.domain.dto.fairy.FairyInfoResponse2;
 import com.example.demo.domain.dto.user.FavoriteFairy;
 import com.example.demo.entity.base.Fairy;
 import com.example.demo.entity.base.User;
@@ -12,10 +13,10 @@ import java.util.List;
 public interface FairyRepository extends JpaRepository<Fairy, Long> {
 
     // 유저가 만든 모든 요정을 조회
-    List<FairyInfoResponse> findAllByUserEmail(String email);
+    List<FairyInfoResponse2> findAllByUserEmail(String email);
 
     // 유저가 만든 특정 성별의 모든 요정을 조회
-    List<FairyInfoResponse> findAllByUserEmailAndGender(String email, Gender gender);
+    List<FairyInfoResponse2> findAllByUserEmailAndGender(String email, Gender gender);
 
     // 즐겨찾기한 요정 조회
     List<Fairy> findByUserAndIsFavorite(User user, Boolean isFavorite);

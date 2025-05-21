@@ -14,7 +14,6 @@ public class FairyInfoRequest {
 
     @Schema(description = "성별", example = "MALE", allowableValues = {"MALE", "FEMALE"})
     private String gender;
-//    private String themes;
-//    private String background;
-//    private String face;
+    private String personality;
+    private String appearance;
 }
