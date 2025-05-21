@@ -35,7 +35,7 @@ public class MainService {
 
 
         // TODO: 요정들 리스트 5개 넘으면 에러
-
+        // 뭐야
 
         return ApiResponse.of(SuccessStatus.USER_INFO_RETRIEVED, UserConverter.toUserInfo(user, fairies));
     }
