@@ -118,13 +118,13 @@ public class FairyServiceImpl implements FairyService {
         return ApiResponse.of(SuccessStatus.FAIRY_RETRIEVED, response);
     }
 
-    // 사용자 요정 목록 조회
+    // 사용자 요정 목록 조회 (성별)
     @Override
-    public ApiResponse<?> getMyFairies(String email, String gender) {
-        User user = userRepository.findByEmail(email)
+    public ApiResponse<?> getMyFairiesWithGender(String email, String gender) {
+        userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
-        List<Fairy> fairies;
+        List<FairyInfoResponse> fairies;
         if (gender.equalsIgnoreCase("all")) {
             // 전체 성별 조회
             fairies = fairyRepository.findAllByUserEmail(email);
@@ -140,7 +140,16 @@ public class FairyServiceImpl implements FairyService {
             }
         }
 
-        List<FairyInfoResponse> fairyInfos = FairyConverter.toFairyInfoResponseList(fairies);
-        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairyInfos);
+        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
+    }
+
+    // 사용자 요정 목록 조회 (즐겨찾기)
+    @Override
+    public ApiResponse<?> getMyFairiesWithFavorite(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        List<Fairy> fairies = fairyRepository.findByUserAndIsFavorite(user, true);
+        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, FairyConverter.toFairyInfosResponse(fairies));
     }
 }

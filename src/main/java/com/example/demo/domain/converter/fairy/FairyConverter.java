@@ -5,6 +5,7 @@ import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyInfoResponse;
 import com.example.demo.domain.dto.fairy.FairyRequest;
 import com.example.demo.domain.dto.fairy.MyFairyResponse;
+import com.example.demo.domain.dto.user.FavoriteFairy;
 import com.example.demo.entity.base.*;
 import com.example.demo.entity.enums.Gender;
 import org.springframework.stereotype.Component;
@@ -78,18 +79,23 @@ public class FairyConverter {
                 .build();
     }
 
-    public static FairyInfoResponse toFairyInfoResponse(Fairy fairy) {
-        return FairyInfoResponse.builder()
-                .fairyId(fairy.getId())
-                .name(fairy.getName())
-//                .isStar(fairy.getIsStar()) // boolean 필드가 있다면
-                .createdAt(fairy.getCreatedAt())
-                .build();
+    public static List<FairyInfoResponse> toFairyInfosResponse(List<Fairy> fairies) {
+        return fairies.stream()
+                .map(f -> FairyInfoResponse.builder()
+                        .id(f.getId())
+                        .name(f.getName())
+                        .isFavorite(f.getIsFavorite())
+                        .createdAt(f.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
     }
 
-    public static List<FairyInfoResponse> toFairyInfoResponseList(List<Fairy> fairies) {
+    public static  List<FavoriteFairy> toFavoriteFairiesResponse(List<Fairy> fairies) {
         return fairies.stream()
-                .map(FairyConverter::toFairyInfoResponse)
-                .collect(Collectors.toList());
+                .map(f -> FavoriteFairy.builder()
+                        .id(f.getId())
+                        .firstImage(f.getFirstImage())
+                        .build())
+                .collect(Collectors.toUnmodifiableList());
     }
 }

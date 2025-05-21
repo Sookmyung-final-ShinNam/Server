@@ -1,6 +1,8 @@
 package com.example.demo.controller.user;
 
 import com.example.demo.base.ApiResponse;
+import com.example.demo.base.code.exception.CustomException;
+import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.controller.BaseController;
 import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyMixRequest;
@@ -29,6 +31,22 @@ public class FairyController extends BaseController {
         return fairyService.createFairyMix(userId, request);
     }
 
+    // 나의 요정 목록 조회
+    @GetMapping
+    public ApiResponse<?> getMyFairies( @RequestParam(defaultValue = "all") String gender,
+                                        @RequestParam(required = false) Boolean favorite) {
+        String userId = getCurrentUserId();
+
+        if (favorite != null && favorite) {
+            if (!gender.equalsIgnoreCase("all")) {
+                throw new CustomException(ErrorStatus.FAIRY_INVALID_FAVORITE);
+            }
+            return fairyService.getMyFairiesWithFavorite(userId);
+        } else {
+            return fairyService.getMyFairiesWithGender(userId, gender);
+        }
+    }
+
     // 나의 요정 조회
     @GetMapping("/{fairyId}")
     public ApiResponse<?> getMyFairy(@RequestParam Long fairyId) {
@@ -36,10 +54,10 @@ public class FairyController extends BaseController {
         return fairyService.getMyFairy(userId, fairyId);
     }
 
-    // 나의 요정 목록 조회
-    @GetMapping
-    public ApiResponse<?> getMyFairies(@RequestParam(defaultValue = "all") String gender) {
-        String userId = getCurrentUserId();
-        return fairyService.getMyFairies(userId, gender);
+    // 즐겨찾기 on/off
+    @PatchMapping("/{fairyId}")
+    public ApiResponse<?> updateFairy(@RequestParam Long fairyId) {
+        return null;
     }
+
 }
