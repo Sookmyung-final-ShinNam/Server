@@ -18,6 +18,7 @@ public enum SuccessStatus implements BaseCode {
     USER_WITHDRAWN_SUCCESS(HttpStatus.OK, "USER_2002", "성공적으로 탈퇴하였습니다. 일정 시간 내로 재로그인 하지 않을시, 모든 정보가 삭제됩니다."),
     USER_LOGIN_SUCCESS(HttpStatus.OK, "USER_2003", "로그인에 성공하였습니다."),
     USER_LOGOUT_SUCCESS(HttpStatus.OK, "USER_2004", "성공적으로 로그아웃하였습니다."),
+    USER_INFO_RETRIEVED(HttpStatus.OK, "USER_2005", "유저 정보가 성공적으로 조회되었습니다."),
 
     // 토큰 관련 성공
     TOKEN_REFRESH_SUCCESS(HttpStatus.OK, "TOKEN_2001", "리프레시 토큰을 통한 토큰 갱신에 성공하였습니다."),

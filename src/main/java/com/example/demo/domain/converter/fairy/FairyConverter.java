@@ -1,9 +1,11 @@
 package com.example.demo.domain.converter.fairy;
 
+import com.example.demo.domain.dto.fairy.FairyInfoResponse2;
 import com.example.demo.domain.dto.fairyTale.FairyTaleInfoResponse;
 import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyInfoResponse;
 import com.example.demo.domain.dto.fairy.MyFairyResponse;
+import com.example.demo.domain.dto.user.FavoriteFairy;
 import com.example.demo.entity.base.*;
 import com.example.demo.entity.enums.Gender;
 import org.springframework.stereotype.Component;
@@ -26,6 +28,14 @@ public class FairyConverter {
                 .build();
     }
 
+    public static List<String> toImages(Fairy fairy) {
+        return  Optional.ofNullable(fairy.getImages())
+                .orElse(List.of())
+                .stream()
+                .map(FairyImage::getImage)
+                .collect(Collectors.toList());
+    }
+
     public static MyFairyResponse toMyFairyResponse(Fairy fairy) {
 
         // 동화 참여 정보 변환
@@ -41,6 +51,7 @@ public class FairyConverter {
                 .stream()
                 .map(FairyImage::getImage)
                 .collect(Collectors.toList());
+
 
         // 요정 대사 리스트 추출
         List<String> lines = Optional.ofNullable(fairy.getLines())
@@ -73,26 +84,23 @@ public class FairyConverter {
                 .build();
     }
 
-
-    // 요정 리스트 조회
-    public static FairyInfoResponse toFairyInfoResponse(Fairy fairy) {
-        return FairyInfoResponse.builder()
-                .fairyId(fairy.getId())
-                .name(fairy.getName())
-                .appearance(fairy.getAppearance())
-                .personality(fairy.getPersonality())
-                .age(fairy.getAge())
-                .gender(fairy.getGender().toString())
-                .isFavorite(Boolean.TRUE.equals(fairy.getIsFavorite()))
-                .createdAt(fairy.getCreatedAt())
-                .build();
-    }
-
-
-    public static List<FairyInfoResponse> toFairyInfoResponseList(List<Fairy> fairies) {
+    public static List<FairyInfoResponse2> toFairyInfosResponse(List<Fairy> fairies) {
         return fairies.stream()
-                .map(FairyConverter::toFairyInfoResponse)
+                .map(f -> FairyInfoResponse2.builder()
+                        .id(f.getId())
+                        .name(f.getName())
+                        .isFavorite(f.getIsFavorite())
+                        .createdAt(f.getCreatedAt())
+                        .build())
                 .collect(Collectors.toList());
     }
 
+    public static  List<FavoriteFairy> toFavoriteFairiesResponse(List<Fairy> fairies) {
+        return fairies.stream()
+                .map(f -> FavoriteFairy.builder()
+                        .id(f.getId())
+                        .firstImage(f.getFirstImage())
+                        .build())
+                .collect(Collectors.toUnmodifiableList());
+    }
 }

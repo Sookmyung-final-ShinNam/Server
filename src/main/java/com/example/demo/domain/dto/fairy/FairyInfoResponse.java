@@ -16,4 +16,6 @@ public class FairyInfoResponse {
     private String gender;         // 성별
     private boolean isFavorite;    // 즐겨찾기 여부
     private LocalDateTime createdAt;  // 생성 시간
+
 }
+

@@ -43,6 +43,7 @@ public class FairyServiceImpl implements FairyService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
+        // TODO: 유저 보유가능한 요정수 인지 체크
         Fairy fairy = fairyConverter.toEntity(request, user);
         fairy = fairyRepository.save(fairy);
 
@@ -76,13 +77,13 @@ public class FairyServiceImpl implements FairyService {
         return ApiResponse.of(SuccessStatus.FAIRY_RETRIEVED, response);
     }
 
-    // 사용자 요정 목록 조회
+    // 사용자 요정 목록 조회 (성별)
     @Override
-    public ApiResponse<?> getMyFairies(String email, String gender) {
-        User user = userRepository.findByEmail(email)
+    public ApiResponse<?> getMyFairiesWithGender(String email, String gender) {
+        userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
-        List<Fairy> fairies;
+        List<FairyInfoResponse2> fairies;
         if (gender.equalsIgnoreCase("all")) {
             // 전체 성별 조회
             fairies = fairyRepository.findAllByUserEmail(email);
@@ -98,7 +99,29 @@ public class FairyServiceImpl implements FairyService {
             }
         }
 
-        List<FairyInfoResponse> fairyInfos = FairyConverter.toFairyInfoResponseList(fairies);
-        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairyInfos);
+        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, fairies);
+    }
+
+    // 사용자 요정 목록 조회 (즐겨찾기)
+    @Override
+    public ApiResponse<?> getMyFairiesWithFavorite(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        List<Fairy> fairies = fairyRepository.findByUserAndIsFavorite(user, true);
+        return ApiResponse.of(SuccessStatus.FAIRY_LIST_RETRIEVED, FairyConverter.toFairyInfosResponse(fairies));
+    }
+
+    // 요정 즐겨찾기 on/off
+    @Override
+    public ApiResponse<?> updateFavoriteStatus(String email, Long fairyId) {
+        userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        Fairy fairy = fairyRepository.findById(fairyId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+
+//        fairy.getIsFavorite()
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.demo.domain.dto.fairy;
 
 import com.example.demo.domain.dto.fairyTale.FairyTaleInfoResponse;
+
 import lombok.Builder;
 import lombok.Getter;
 

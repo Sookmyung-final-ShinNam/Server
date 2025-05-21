@@ -12,7 +12,6 @@ import java.util.List;
 
 @Entity
 @Getter
-@Setter
 @NoArgsConstructor
 public class Fairy extends BaseEntity {
 
@@ -30,6 +29,7 @@ public class Fairy extends BaseEntity {
     private Gender gender;       // 요정 성별
 
     private Boolean isFavorite;
+    private String firstImage;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -59,4 +59,12 @@ public class Fairy extends BaseEntity {
         this.participations = (participations != null) ? participations : new ArrayList<>();  // appearances 리스트 초기화
     }
 
+    // firstImage 초기화
+    public void setFirstImage() {
+        if (images != null && images.isEmpty()) {
+            this.firstImage = images.get(0).getImage();
+        } else {
+            this.firstImage = null;
+        }
+    }
 }

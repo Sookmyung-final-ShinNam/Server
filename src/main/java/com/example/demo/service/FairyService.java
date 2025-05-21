@@ -10,5 +10,8 @@ public interface FairyService {
     ApiResponse<?> createFairyMix(String userId, FairyMixRequest request);
 
     ApiResponse<?> getMyFairy(String userId, Long fairyId);
-    ApiResponse<?> getMyFairies(String userId, String gender);
+    ApiResponse<?> getMyFairiesWithGender(String userId, String gender);
+    ApiResponse<?> getMyFairiesWithFavorite(String userId);
+
+    ApiResponse<?> updateFavoriteStatus(String userId, Long fairyId);
 }

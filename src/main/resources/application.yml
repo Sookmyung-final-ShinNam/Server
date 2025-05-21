@@ -1,6 +1,6 @@
 domain: "10.101.39.216"
-base-url: "http://10.101.39.216:8080"
-redirect-url: "http://10.101.39.216:8080/swagger-ui/index.html"
+base-url: "http://localhost:8080"
+redirect-url: "http://localhost:8080/swagger-ui/index.html"
 
 withdrawn:
   delete-time: 60
