@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class FairyInfoResponse2 {
     private Long id;
     private String name;
+    private String firstImage;
     private Boolean isFavorite;
     private LocalDateTime createdAt;
 }
