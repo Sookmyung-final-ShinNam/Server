@@ -41,6 +41,16 @@ public class User extends UserRelations {
     @Builder.Default
     private Integer point = 0;
 
+    // 보유 가능한 최대 요정 수
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer maxFairyNum = 5;
+
+    // 보유 가능한 최대 동화 수
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer maxFairyTaleNum = 5;
+
     // active 는 3개 ( 활성 = 로그인, 비활성 = 로그아웃, 탈퇴 = 일정시간 이상 지속시 자동으로 회원 정보 삭제 ) 중 하나
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -50,12 +60,12 @@ public class User extends UserRelations {
     @Column
     private LocalDateTime withdrawAt;
 
-    // 유저가 소유한 요정들
+    // 소유한 요정들
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Fairy> fairies = new ArrayList<>();
 
-    // 유저가 소유한 동화들
+    // 소유한 동화들
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<FairyTale> fairyTales = new ArrayList<>();
@@ -80,4 +90,13 @@ public class User extends UserRelations {
         this.active = Status.INACTIVE;
     }
 
+    // 4. 유저가 보유 가능한 요정 수를 넘지 않는지 체크
+    public boolean isFairyLimited() {
+        return fairies.size() >= maxFairyNum;
+    }
+
+    // 5. 유저가 보유 가능한 동화 수를 넘지 않는지 체크
+    public boolean isFairyTaleLimited() {
+        return fairyTales.size() >= maxFairyTaleNum;
+    }
 }

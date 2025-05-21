@@ -1,7 +1,6 @@
 package com.example.demo.domain.dto.fairy;
 
-import com.example.demo.domain.dto.FairyTale.FairyTaleInfoResponse;
-import com.example.demo.entity.base.Fairy;
+import com.example.demo.domain.dto.fairyTale.FairyTaleInfoResponse;
 import lombok.*;
 
 import java.util.List;

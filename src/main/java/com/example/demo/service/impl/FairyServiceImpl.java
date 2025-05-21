@@ -43,6 +43,7 @@ public class FairyServiceImpl implements FairyService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
+        // TODO: 유저 보유가능한 요정수 인지 체크
         Fairy fairy = fairyConverter.toEntity(request, user);
         fairy = fairyRepository.save(fairy);
 

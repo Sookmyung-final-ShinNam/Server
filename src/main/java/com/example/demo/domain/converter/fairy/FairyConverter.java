@@ -1,6 +1,6 @@
 package com.example.demo.domain.converter.fairy;
 
-import com.example.demo.domain.dto.FairyTale.FairyTaleInfoResponse;
+import com.example.demo.domain.dto.fairyTale.FairyTaleInfoResponse;
 import com.example.demo.domain.dto.fairy.FairyInfoRequest;
 import com.example.demo.domain.dto.fairy.FairyInfoResponse;
 import com.example.demo.domain.dto.fairy.FairyRequest;
@@ -36,6 +36,14 @@ public class FairyConverter {
                 .build();
     }
 
+    public static List<String> toImages(Fairy fairy) {
+        return  Optional.ofNullable(fairy.getImages())
+                .orElse(List.of())
+                .stream()
+                .map(FairyImage::getImage)
+                .collect(Collectors.toList());
+    }
+
     public static MyFairyResponse toMyFairyResponse(Fairy fairy) {
 
         List<FairyTaleInfoResponse> fairyTales = Optional.ofNullable(fairy.getParticipations())
@@ -44,11 +52,7 @@ public class FairyConverter {
                 .map(FairyConverter::toFairyTaleInfo)
                 .collect(Collectors.toList());
 
-        List<String> imags = Optional.ofNullable(fairy.getImages())
-                .orElse(List.of())
-                .stream()
-                .map(FairyImage::getImage)
-                .collect(Collectors.toList());
+        List<String> images = toImages(fairy);
 
         List<String> lines = Optional.ofNullable(fairy.getLines())
                 .orElse(List.of())
@@ -61,7 +65,7 @@ public class FairyConverter {
                 .name(fairy.getName())
                 .personality(fairy.getPersonality())
                 .age(fairy.getAge())
-                .images(imags)
+                .images(images)
                 .lines(lines)
                 .fairyTales(fairyTales)
                 .build();
