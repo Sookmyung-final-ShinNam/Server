@@ -5,16 +5,17 @@ import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
 import com.example.demo.controller.BaseController;
 import com.example.demo.service.FairyTaleService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import com.example.demo.domain.dto.fairyTale.FairyTaleUpdateRequest;
 
 @RestController
 @RequestMapping("/api/fairy-tale")
+@RequiredArgsConstructor
 public class FairyTaleController extends BaseController {
 
-    @Autowired
-    private FairyTaleService fairyTaleService;
+    private final FairyTaleService fairyTaleService;
 
     // 나의 동화 목록 조회
     @GetMapping
@@ -39,4 +40,10 @@ public class FairyTaleController extends BaseController {
         return fairyTaleService.getMyFairyTale(userId, fairyTaleId);
     }
 
+    // 즐겨찾기 on/off
+    @PatchMapping("/{fairyId}")
+    public ApiResponse<?> updateFavoriteStatus(@RequestParam Long fairyId) {
+        String userId = getCurrentUserId();
+        return fairyTaleService.updateFavoriteStatus(userId, fairyId);
+    }
 }

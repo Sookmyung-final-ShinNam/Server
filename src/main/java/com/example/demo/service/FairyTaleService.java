@@ -9,4 +9,5 @@ public interface FairyTaleService {
 
     ApiResponse<?> getMyFairyTale(String userId, Long fairyTaleId);
 
+    ApiResponse<?> updateFavoriteStatus(String userId, Long fairyTaleId);
 }

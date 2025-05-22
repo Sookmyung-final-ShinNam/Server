@@ -9,6 +9,7 @@ import com.example.demo.domain.converter.fairyTale.PageConverter;
 import com.example.demo.domain.dto.fairy.FairyInfoResponse2;
 import com.example.demo.domain.dto.fairyTale.FairyTaleResponse;
 import com.example.demo.domain.dto.fairyTale.PageResponse;
+import com.example.demo.entity.base.Fairy;
 import com.example.demo.entity.base.FairyTale;
 import com.example.demo.entity.base.Page;
 import com.example.demo.entity.base.User;
@@ -20,6 +21,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.FairyTaleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,9 +76,26 @@ public class FairyTaleServiceImpl implements FairyTaleService {
         FairyTale fairyTale = fairyTaleRepository.findById(fairyTaleId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
-        if (user != fairyTale.getUser()) return ApiResponse.onFailure(ErrorStatus.FAIRY_TALE_NOT_FOUND, "당신의 동화가 아닙니다.");
+        if (user != fairyTale.getUser()) return ApiResponse.onFailure(ErrorStatus.FAIRY_TALE_NOT_FOUND, "해당 사용자의 동화가 아닙니다.");
 
         return ApiResponse.of(SuccessStatus.FAIRY_TALE_CONTENT_RETRIEVED, FairyTaleConverter.toMyFairyTaleResponse(fairyTale));
     }
 
+    @Override
+    @Transactional
+    public ApiResponse<?> updateFavoriteStatus(String email, Long fairyTaleId) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        FairyTale fairyTale = fairyTaleRepository.findById(fairyTaleId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+
+        if (user != fairyTale.getUser()) return ApiResponse.onFailure(ErrorStatus.FAIRY_TALE_NOT_FOUND, "해당 사용자의 동화가 아닙니다.");
+
+        fairyTale.updateFavoriteStatus(!fairyTale.getIsFavorite());
+        fairyTaleRepository.save(fairyTale);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_TALE_UPDATED,
+                fairyTaleId + " 동화의 수정된 favorite 상태 - " + fairyTale.getIsFavorite());
+    }
 }
