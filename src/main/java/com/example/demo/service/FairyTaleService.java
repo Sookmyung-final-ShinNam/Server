@@ -4,8 +4,10 @@ import com.example.demo.base.ApiResponse;
 
 public interface FairyTaleService {
 
-    ApiResponse<?> getMyFairyTales(String userId);
+    ApiResponse<?> getMyFairyTalesWithType(String userId, String type);
+    ApiResponse<?> getMyFairyTalesWithFavorite(String userId);
 
-    ApiResponse<?> getFairyTaleContent(String userId, Long fairyTaleId);
+    ApiResponse<?> getMyFairyTale(String userId, Long fairyTaleId);
 
+    ApiResponse<?> updateFavoriteStatus(String userId, Long fairyTaleId);
 }

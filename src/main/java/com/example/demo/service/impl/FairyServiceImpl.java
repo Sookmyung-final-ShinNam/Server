@@ -114,6 +114,7 @@ public class FairyServiceImpl implements FairyService {
 
     // 요정 즐겨찾기 on/off
     @Override
+    @Transactional
     public ApiResponse<?> updateFavoriteStatus(String email, Long fairyId) {
         userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
@@ -121,7 +122,10 @@ public class FairyServiceImpl implements FairyService {
         Fairy fairy = fairyRepository.findById(fairyId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
 
-//        fairy.getIsFavorite()
-        return null;
+        fairy.updateFavoriteStatus(!fairy.getIsFavorite());
+        fairyRepository.save(fairy);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_UPDATED,
+                fairyId + " 요정의 수정된 favorite 상태 - " + fairy.getIsFavorite());
     }
 }

@@ -67,4 +67,8 @@ public class Fairy extends BaseEntity {
             this.firstImage = null;
         }
     }
+
+    public void updateFavoriteStatus(boolean status) {
+        this.isFavorite = status;
+    }
 }
