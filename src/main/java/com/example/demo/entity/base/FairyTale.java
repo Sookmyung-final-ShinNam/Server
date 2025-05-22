@@ -16,7 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "faryTale")
+@Table(name = "fairyTale")
 public class FairyTale extends BaseEntity {
 
     @Id

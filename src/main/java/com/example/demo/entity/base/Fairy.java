@@ -14,6 +14,9 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "fairy")
 public class Fairy extends BaseEntity {
 
     @Id
@@ -39,26 +42,17 @@ public class Fairy extends BaseEntity {
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
+    @Builder.Default
     private List<FairyParticipation> participations = new ArrayList<>(); // 요정의 출연 기록들
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<FairyLine> lines = new ArrayList<>();
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<FairyImage> images = new ArrayList<>();
 
-    @Builder
-    public Fairy(Long id, String name, String personality, String appearance, User user, List<FairyParticipation> participations,
-                 Integer age, Gender gender) {
-        this.id = id;
-        this.name = name;
-        this.personality = personality;
-        this.appearance = appearance;
-        this.user = user;
-        this.age = age;
-        this.gender = gender;
-        this.participations = (participations != null) ? participations : new ArrayList<>();  // appearances 리스트 초기화
-    }
 
     // firstImage 초기화
     public void setFirstImage() {

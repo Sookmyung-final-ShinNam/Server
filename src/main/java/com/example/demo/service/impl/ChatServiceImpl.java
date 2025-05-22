@@ -93,9 +93,8 @@ public class ChatServiceImpl implements ChatService {
         User user = userRepository.findByEmail(userId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
-        // 2. FairyTale 엔티티 생성
-        // 주제는 띄어쓰기로 분리하여 theme1, theme2, theme3 에 저장
-        String[] themes = request.getThemes().split("\\s+");
+        // 쉼표(,) 기준으로 분리
+        String[] themes = request.getThemes().split("\\s*,\\s*");  // 쉼표 주변 공백도 제거
         String theme1 = themes.length > 0 ? themes[0] : null;
         String theme2 = themes.length > 1 ? themes[1] : null;
         String theme3 = themes.length > 2 ? themes[2] : null;
@@ -107,6 +106,7 @@ public class ChatServiceImpl implements ChatService {
                 .theme2(theme2)
                 .theme3(theme3)
                 .user(user)
+                .isFavorite(false)
                 .build();
 
         // 3. Fairy 엔티티 생성 및 저장
@@ -122,6 +122,7 @@ public class ChatServiceImpl implements ChatService {
                 .gender(gender)
                 .appearance(appearance)
                 .user(user)
+                .isFavorite(false)
                 .build();
 
         fairyRepository.save(fairy);
@@ -290,7 +291,7 @@ public class ChatServiceImpl implements ChatService {
                 }
             }
 
-// 7. 저장 (순서 주의)
+            // 7. 저장 (순서 주의)
             pageRepository.saveAll(pages);
             fairyTaleRepository.save(fairyTale);
             if (fairy != null) {
@@ -298,7 +299,7 @@ public class ChatServiceImpl implements ChatService {
                 fairyLineRepository.saveAll(lines);
             }
 
-// 8. 디버깅 로그
+            // 8. 디버깅 로그
             log.info("총 저장된 장면 수: {}", pages.size());
             for (Page p : pages) {
                 log.debug("장면 내용: {}", p.getPlot());
