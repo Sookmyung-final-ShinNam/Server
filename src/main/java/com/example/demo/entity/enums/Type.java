@@ -1,7 +1,16 @@
 package com.example.demo.entity.enums;
 
-// 활성화=로그인, 비활성화=로그아웃, 탈퇴=일정 시간 이상 상태가 지속되면 회원 삭제
+import com.example.demo.base.code.exception.CustomException;
+import com.example.demo.base.status.ErrorStatus;
 
 public enum Type {
-    ONE, MORE
+    ONE, MORE;
+
+    public static Type fromString(String value) {
+        try {
+            return Type.valueOf(value.toUpperCase());
+        } catch (Exception e) {
+            throw new CustomException(ErrorStatus.FAIRY_TALE_INVALID_TYPE);
+        }
+    }
 }

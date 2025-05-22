@@ -1,4 +1,4 @@
-package com.example.demo.domain.dto.fairy;
+package com.example.demo.domain.dto.fairyTale;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -7,10 +7,9 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class FairyInfoResponse2 {
+public class FairyTaleResponse {
     private Long id;
-    private String name;
-    private String firstImage;
+    private String title;
     private Boolean isFavorite;
     private LocalDateTime createdAt;
 }

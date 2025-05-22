@@ -16,6 +16,7 @@ public class MyFairyResponse {
     private String appearance;                // 외모
     private Integer age;                      // 나이
     private String gender;                    // 성별
+    private String firstImage;
     private boolean isFavorite;               // 즐겨찾기 여부
     private List<String> images;              // 요정 이미지 리스트
     private List<String> lines;               // 요정 대사 리스트

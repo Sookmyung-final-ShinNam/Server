@@ -33,6 +33,7 @@ public enum SuccessStatus implements BaseCode {
     // 요정 관련 성공 응답
     FAIRY_CREATED(HttpStatus.CREATED, "FAIRY_2010", "요정이 성공적으로 생성되었습니다."),
     FAIRY_RETRIEVED(HttpStatus.OK, "FAIRY_2000", "요정이 성공적으로 조회되었습니다."),
+    FAIRY_UPDATED(HttpStatus.CREATED, "FAIRY_2002", "요정이 성공적으로 수정되었습니다."),
     FAIRY_LIST_RETRIEVED(HttpStatus.OK, "FAIRY_2001", "요정 목록이 성공적으로 조회되었습니다."),
 
     // 동화 관련 성공 응답

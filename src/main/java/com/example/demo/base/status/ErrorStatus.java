@@ -47,7 +47,9 @@ public enum ErrorStatus implements BaseErrorCode {
     PAYMENT_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT_4003", "결제 정보 저장 실패"),
 
     // 동화 관련 에러
+    FAIRY_TALE_INVALID_TYPE(HttpStatus.BAD_REQUEST, "FAIRY_4001", "유효하지 않은 요정 타입입니다. TYPE: ONE, MORE"),
     FAIRY_TALE_NOT_FOUND(HttpStatus.NOT_FOUND, "FAIRY_TALE_4004", "해당 동화를 찾을 수 없습니다."),
+    FAIRY_TALE_INVALID_FAVORITE(HttpStatus.BAD_REQUEST, "FAIRY_4004", "favorite이 true일 경우, ONE, MORE은 같이 요청할 수 없습니다."),
 
 
     // 요정 관련 에러

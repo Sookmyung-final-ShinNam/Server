@@ -59,4 +59,8 @@ public class FairyTale extends BaseEntity {
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Page> pages = new ArrayList<>();
+
+    public void updateFavoriteStatus(boolean status) {
+        this.isFavorite = status;
+    }
 }
