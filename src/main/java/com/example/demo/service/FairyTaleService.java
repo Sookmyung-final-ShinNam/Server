@@ -7,6 +7,6 @@ public interface FairyTaleService {
     ApiResponse<?> getMyFairyTalesWithType(String userId, String type);
     ApiResponse<?> getMyFairyTalesWithFavorite(String userId);
 
-    ApiResponse<?> getFairyTaleContent(String userId, Long fairyTaleId);
+    ApiResponse<?> getMyFairyTale(String userId, Long fairyTaleId);
 
 }

@@ -36,7 +36,7 @@ public class FairyTaleController extends BaseController {
     @GetMapping("/{fairyTaleId}")
     public ApiResponse<?> getFairyTaleContent(@PathVariable Long fairyTaleId) {
         String userId = getCurrentUserId();
-        return fairyTaleService.getFairyTaleContent(userId, fairyTaleId);
+        return fairyTaleService.getMyFairyTale(userId, fairyTaleId);
     }
 
 }

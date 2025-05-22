@@ -7,7 +7,7 @@ import lombok.Getter;
 @Builder
 public class PageResponse {
 
-    private Long id;
+    private Long pageId;
     private Integer pageNo;
     private String plot;
     private String image;
