@@ -125,6 +125,6 @@ public class FairyServiceImpl implements FairyService {
         fairy.updateFavoriteStatus(!fairy.getIsFavorite());
         fairyRepository.save(fairy);
 
-        return ApiResponse.of(SuccessStatus.FAIRY_UPDATED, "수정된 favorite 상태: " + fairy.getIsFavorite());
+        return ApiResponse.of(SuccessStatus.FAIRY_UPDATED, "수정된 favorite 상태 - " + fairy.getIsFavorite());
     }
 }
