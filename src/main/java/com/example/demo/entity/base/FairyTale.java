@@ -54,5 +54,9 @@ public class FairyTale extends BaseEntity {
 
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    private List<PageDraft> pageDrafts = new ArrayList<>();
+
+    @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Page> pages = new ArrayList<>();
 }

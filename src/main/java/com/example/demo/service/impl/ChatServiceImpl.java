@@ -9,10 +9,7 @@ import com.example.demo.domain.dto.gpt.*;
 import com.example.demo.entity.base.*;
 import com.example.demo.entity.enums.Gender;
 import com.example.demo.entity.enums.Type;
-import com.example.demo.repository.FairyRepository;
-import com.example.demo.repository.FairyTaleRepository;
-import com.example.demo.repository.PageRepository;
-import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.*;
 import com.example.demo.service.ChatService;
 import com.example.demo.service.FairyService;
 import com.example.demo.service.FairyTaleService;
@@ -20,6 +17,9 @@ import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +30,13 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -46,6 +51,8 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PageDraftRepository pageDraftRepository;
 
     @Autowired
     private PageRepository pageRepository;
@@ -126,22 +133,20 @@ public class ChatServiceImpl implements ChatService {
         // FairyTale에 참여 기록 추가
         fairyTale.getParticipations().add(participation);
 
-        // 5. Page 생성 (answer 내용을 plot에 저장)
-        Page page = Page.builder()
-                .plot(answer)
+        // 5. PageDraft 생성 (answer 내용을 저장)
+        PageDraft pageDraft = PageDraft.builder()
+                .next(answer)
                 .fairyTale(fairyTale)
                 .build();
 
-        // FairyTale에 페이지 추가
-        fairyTale.getPages().add(page);
+        // FairyTale에 페이지Draft 추가
+        fairyTale.getPageDrafts().add(pageDraft);
 
         // 6. DB 저장 (Repository 호출)
         fairyTaleRepository.save(fairyTale);
-        // participation과 page는 cascade 옵션에 의해 저장됨
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
-
 
     @Override
     public ApiResponse generateQuestion(String userId, StoryRequest request) {
@@ -160,6 +165,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
+    @Transactional
     public ApiResponse generateNext(String userId, StoryRequest request) {
         String promptFileName = getPromptFileName("nextStory_num", request.getNowTry());
         String bodyTemplate = promptLoader.loadPrompt(promptFileName);
@@ -172,10 +178,54 @@ public class ChatServiceImpl implements ChatService {
         String body = bodyTemplate.replace("{situation}", combinedContent);
         String answer = callChatGpt(body);
 
-        savePageWithField(fairyTale, "plot", answer);
+        savePageWithField(fairyTale, "next", answer);
+
+
+        log.info("📚 답변 성공 : {}", answer);
+
+        combinedContent = buildPromptFromPageDraft(fairyTale);
+
+        // nowTry 가 4일 때 summaryStory를 호출하고 저장된 모든 칸을 삭제
+        if ("4".equals(request.getNowTry())) {
+            // 1. 전체 줄거리 출력
+            log.info("📚 전체 줄거리 완성: {}", combinedContent);
+
+            // 2. 지금까지 쌓인 모든 페이지 삭제
+            User user = userRepository.findByEmail(userId)
+                    .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+            pageDraftRepository.deleteByFairyTaleIdAndFairyTaleUserId(fairyTale.getId(), user.getId());
+            log.info("🗑️ 지금까지 쌓인 모든 페이지를 삭제했습니다.");
+
+
+            bodyTemplate = promptLoader.loadPrompt("summary_story.json");
+            body = bodyTemplate.replace("{situation}", combinedContent);
+            answer = callChatGpt(body);
+            log.info("answer: {}", answer);
+
+            // "장면 1:", "장면 2:" ... 기준으로 분할
+            Pattern pattern = Pattern.compile("장면 \\d+: (.*?)(?=(장면 \\d+:|$))", Pattern.DOTALL);
+            Matcher matcher = pattern.matcher(answer);
+
+            List<Page> pages = new ArrayList<>();
+
+            while (matcher.find()) {
+                String plot = matcher.group(1).trim();
+                if (!plot.isEmpty()) {
+                    Page page = Page.builder()
+                            .plot(plot)
+                            .fairyTale(fairyTale)
+                            .build();
+                    pages.add(page);
+                }
+            }
+
+            pageRepository.saveAll(pages);
+        }
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
+
 
     @Override
     public ApiResponse provideFeedback(String userId, FeedbackRequest request) {
@@ -215,6 +265,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
 
+
     // 공통 부분
     private String getPromptFileName(String baseName, String nowTry) {
         return switch (nowTry) {
@@ -231,33 +282,56 @@ public class ChatServiceImpl implements ChatService {
     }
 
     private String buildCombinedContent(FairyTale fairyTale) {
-        List<Page> pages = pageRepository.findByFairyTaleOrderByIdAsc(fairyTale);
+        List<PageDraft> pageDrafts = pageDraftRepository.findByFairyTaleOrderByIdAsc(fairyTale);
 
         StringBuilder combinedContent = new StringBuilder();
-        for (Page page : pages) {
-            if (page.getQuestion() != null) {
-                combinedContent.append("질문: ").append(page.getQuestion()).append("\n");
+        for (PageDraft pageDraft : pageDrafts) {
+            if (pageDraft.getQuestion() != null) {
+                combinedContent.append("질문: ").append(pageDraft.getQuestion()).append("\n");
             }
-            if (page.getAnswer() != null) {
-                combinedContent.append("답변: ").append(page.getAnswer()).append("\n");
+            if (pageDraft.getAnswer() != null) {
+                combinedContent.append("답변: ").append(pageDraft.getAnswer()).append("\n");
             }
-            if (page.getPlot() != null) {
-                combinedContent.append("줄거리: ").append(page.getPlot()).append("\n");
+            if (pageDraft.getNext() != null) {
+                combinedContent.append("다음이야기: ").append(pageDraft.getNext()).append("\n");
             }
         }
         return combinedContent.toString();
     }
 
+    private String buildPromptFromPageDraft(FairyTale fairyTale) {
+        List<PageDraft> drafts = pageDraftRepository.findByFairyTaleOrderByIdAsc(fairyTale);
+
+        StringBuilder sb = new StringBuilder();
+        int chapter = 1;
+        for (PageDraft draft : drafts) {
+            sb.append("### 장면 ").append(chapter).append(" ###\n");
+            if (draft.getQuestion() != null && !draft.getQuestion().isBlank()) {
+                sb.append("질문: ").append(draft.getQuestion()).append("\n");
+            }
+            if (draft.getAnswer() != null && !draft.getAnswer().isBlank()) {
+                sb.append("답변: ").append(draft.getAnswer()).append("\n");
+            }
+            if (draft.getNext() != null && !draft.getNext().isBlank()) {
+                sb.append("다음 이야기: ").append(draft.getNext()).append("\n");
+            }
+            sb.append("\n");
+            chapter++;
+        }
+        return sb.toString();
+    }
+
+
     private void savePageWithField(FairyTale fairyTale, String field, String content) {
-        Page targetPage;
+        PageDraft targetPage;
 
         if ("question".equals(field)) {
             // question는 새로운 Page 생성
-            targetPage = new Page();
+            targetPage = new PageDraft();
             targetPage.setFairyTale(fairyTale);
         } else {
-            // answer 또는 plot은 마지막 Page 수정
-            Optional<Page> optionalLastPage = pageRepository.findTopByFairyTaleOrderByIdDesc(fairyTale);
+            // answer 또는 next은 마지막 칸 수정
+            Optional<PageDraft> optionalLastPage = pageDraftRepository.findTopByFairyTaleOrderByIdDesc(fairyTale);
             if (optionalLastPage.isEmpty()) {
                 throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST); // 마지막 페이지가 없으면 예외 처리
             }
@@ -267,13 +341,12 @@ public class ChatServiceImpl implements ChatService {
         switch (field) {
             case "question" -> targetPage.setQuestion(content);
             case "answer" -> targetPage.setAnswer(content);
-            case "plot" -> targetPage.setPlot(content);
+            case "next" -> targetPage.setNext(content);
             default -> throw new CustomException(ErrorStatus.COMMON_BAD_REQUEST);
         }
 
-        pageRepository.save(targetPage);
+        pageDraftRepository.save(targetPage);
     }
-
 
 
     // 공통 부분 : gpt 호출
@@ -310,21 +383,44 @@ public class ChatServiceImpl implements ChatService {
                 os.write(input, 0, input.length);
             }
 
-            // ✅ 응답 받기
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                StringBuilder response = new StringBuilder();
-                String line;
-                while ((line = br.readLine()) != null) {
-                    response.append(line.trim());
-                }
+            // ✅ 응답 상태 코드 확인
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line.trim());
+                    }
 
-                JsonNode responseJson = mapper.readTree(response.toString());
-                return responseJson.get("choices").get(0).get("message").get("content").asText();
+                    JsonNode responseJson = mapper.readTree(response.toString());
+                    return responseJson.get("choices").get(0).get("message").get("content").asText();
+                }
+            } else {
+                // ✅ 오류 응답 처리
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        errorResponse.append(line.trim());
+                    }
+
+                    System.err.println("❌ ChatGPT 오류 응답 코드: " + responseCode);
+                    System.err.println("❌ ChatGPT 오류 메시지: " + errorResponse);
+
+                    // 오류 메시지 파싱해서 사용자에게 안내할 수도 있음
+                    JsonNode errorJson = mapper.readTree(errorResponse.toString());
+                    String errorMessage = errorJson.path("error").path("message").asText();
+                    throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
+                }
             }
 
         } catch (IOException e) {
+            log.error("❌ ChatGPT 호출 중 예외 발생: {}", e.getMessage());
             throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
         }
     }
+
+
 
 }
