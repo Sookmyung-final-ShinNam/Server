@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import org.json.JSONObject;
 import com.example.demo.base.ApiResponse;
 import com.example.demo.base.code.exception.CustomException;
 import com.example.demo.base.status.ErrorStatus;
@@ -11,8 +12,6 @@ import com.example.demo.entity.enums.Gender;
 import com.example.demo.entity.enums.Type;
 import com.example.demo.repository.*;
 import com.example.demo.service.ChatService;
-import com.example.demo.service.FairyService;
-import com.example.demo.service.FairyTaleService;
 import com.example.demo.util.PromptLoader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,12 +30,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,6 +53,14 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private PageRepository pageRepository;
+
+
+    @Autowired
+    private FairyParticipationRepository fairyParticipationRepository;
+
+
+    @Autowired
+    private FairyLineRepository fairyLineRepository;
 
     @Autowired
     private FairyTaleRepository fairyTaleRepository;
@@ -199,28 +204,111 @@ public class ChatServiceImpl implements ChatService {
 
 
             bodyTemplate = promptLoader.loadPrompt("summary_story.json");
+
+
             body = bodyTemplate.replace("{situation}", combinedContent);
             answer = callChatGpt(body);
             log.info("answer: {}", answer);
 
-            // "장면 1:", "장면 2:" ... 기준으로 분할
-            Pattern pattern = Pattern.compile("장면 \\d+: (.*?)(?=(장면 \\d+:|$))", Pattern.DOTALL);
-            Matcher matcher = pattern.matcher(answer);
+
+
+            // 1. 제목 추출 및 저장
+            Pattern titlePattern = Pattern.compile("^(.+?)\\n\\n장면 1:", Pattern.DOTALL);
+            Matcher titleMatcher = titlePattern.matcher(answer);
+            if (titleMatcher.find()) {
+                String title = titleMatcher.group(1).trim();
+                fairyTale.setTitle(title);
+            }
+
+            // 2. 장면 추출 및 Page 저장
+            Pattern scenePattern = Pattern.compile("장면 \\d+:(.*?)(?=장면 \\d+:|주인공 성격 *:|\\w+의 대사 배열|$)", Pattern.DOTALL);
+            Matcher sceneMatcher = scenePattern.matcher(answer);
 
             List<Page> pages = new ArrayList<>();
+            String firstSceneContent = null;
+            int index = 0;
 
-            while (matcher.find()) {
-                String plot = matcher.group(1).trim();
+            while (sceneMatcher.find()) {
+                String plot = sceneMatcher.group(1).trim();
                 if (!plot.isEmpty()) {
                     Page page = Page.builder()
                             .plot(plot)
                             .fairyTale(fairyTale)
                             .build();
                     pages.add(page);
+
+                    if (index == 0) {
+                        firstSceneContent = plot;
+                    }
+                    index++;
                 }
             }
 
+            // 3. 첫 번째 장면 저장
+            if (firstSceneContent != null) {
+                fairyTale.setContent(firstSceneContent);
+            } else {
+                log.warn("firstSceneContent 추출 실패");
+            }
+
+            // 4. 요정 조회
+            Optional<FairyParticipation> participationOpt = fairyParticipationRepository.findFirstByFairyTale(fairyTale);
+            Fairy fairy = null;
+            if (participationOpt.isPresent()) {
+                fairy = participationOpt.get().getFairy();
+            } else {
+                log.warn("요정 조회 실패: 해당 동화에 출연한 요정을 찾을 수 없습니다. fairyTale ID = {}", fairyTale.getId());
+            }
+
+            // 5. 성격 추출 및 저장
+            Pattern personalityPattern = Pattern.compile("주인공 성격 *: *(.+?)\\n");
+            Matcher personalityMatcher = personalityPattern.matcher(answer);
+            if (personalityMatcher.find() && fairy != null) {
+                String personality = personalityMatcher.group(1).trim();
+                fairy.setPersonality(personality);
+            }
+
+            // 6. 대사 추출 및 저장 (요정 이름 유연하게 대응)
+            Pattern linePattern = Pattern.compile("([^\\s]+)의 대사 배열\\s*:\\s*\\[(.*?)\\]", Pattern.DOTALL);
+            Matcher lineMatcher = linePattern.matcher(answer);
+            List<FairyLine> lines = new ArrayList<>();
+
+            if (lineMatcher.find() && fairy != null) {
+                String rawLines = lineMatcher.group(2);
+                Matcher quoteMatcher = Pattern.compile("'(.*?)'|\"(.*?)\"").matcher(rawLines);
+
+                while (quoteMatcher.find()) {
+                    String line = quoteMatcher.group(1) != null ? quoteMatcher.group(1) : quoteMatcher.group(2);
+                    line = line.trim();
+                    if (!line.isEmpty()) {
+                        FairyLine fairyLine = FairyLine.builder()
+                                .line(line)
+                                .fairy(fairy)
+                                .build();
+                        lines.add(fairyLine);
+                    }
+                }
+            }
+
+// 7. 저장 (순서 주의)
             pageRepository.saveAll(pages);
+            fairyTaleRepository.save(fairyTale);
+            if (fairy != null) {
+                fairyRepository.save(fairy);
+                fairyLineRepository.saveAll(lines);
+            }
+
+// 8. 디버깅 로그
+            log.info("총 저장된 장면 수: {}", pages.size());
+            for (Page p : pages) {
+                log.debug("장면 내용: {}", p.getPlot());
+            }
+            log.info("저장된 대사 수: {}", lines.size());
+            for (FairyLine fl : lines) {
+                log.debug("대사: {}", fl.getLine());
+            }
+
+
         }
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
@@ -349,6 +437,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
 
+    // 공통 부분 : gpt 호출
     // 공통 부분 : gpt 호출
     public String callChatGpt(String finalPromptJson) {
         HttpURLConnection conn = null;

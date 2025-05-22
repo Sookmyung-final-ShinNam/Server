@@ -19,6 +19,7 @@ public class Page {
     private String image;
 
     // 줄거리
+    @Column(length = 1000)
     private String plot;
 
     @ManyToOne

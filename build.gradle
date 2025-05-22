@@ -46,6 +46,8 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 	// OAuth 2.0
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	// json
+	implementation 'org.json:json:20231013'
 }
 
 tasks.named('test') {
