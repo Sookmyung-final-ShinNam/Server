@@ -50,10 +50,6 @@ public class MixServiceImpl implements MixService {
     @Autowired
     private FairyParticipationRepository fairyParticipationRepository;
 
-
-    @Autowired
-    private FairyLineRepository fairyLineRepository;
-
     @Autowired
     private FairyTaleRepository fairyTaleRepository;
 
@@ -120,19 +116,10 @@ public class MixServiceImpl implements MixService {
             System.out.println("Scene " + (i + 1) + ": " + scenes.get(i));
         }
 
-        Map<String, List<String>> characterLines = extractLines(answer);
-        System.out.println("[파싱된 등장인물 수] " + characterLines.size());
-        for (Map.Entry<String, List<String>> entry : characterLines.entrySet()) {
-            System.out.println("등장인물: " + entry.getKey());
-            for (String line : entry.getValue()) {
-                System.out.println("  대사: " + line);
-            }
-        }
 
 // 2. 사용자 조회
         User user = userRepository.findByEmail(userId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
-        System.out.println("[사용자 조회 성공] " + user.getEmail());
 
 // 3. 테마 분리
         String[] themes = request.getThemes().split("\\s*,\\s*");
@@ -167,39 +154,17 @@ public class MixServiceImpl implements MixService {
         }
 
 // 6. FairyParticipation 저장
-        Set<String> characterNames = characterLines.keySet();
-
-        for (String name : characterNames) {
-            Fairy fairy = fairyRepository.findByName(name)
-                    .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
-
-            FairyParticipation participation = FairyParticipation.builder()
-                    .fairy(fairy)
-                    .fairyTale(fairyTale)
-                    .build();
-            fairyParticipationRepository.save(participation);
-            System.out.println("[요정 참여 정보 저장 완료] 요정: " + name);
-        }
-
-
-// 7. FairyLine 저장
-        for (Map.Entry<String, List<String>> entry : characterLines.entrySet()) {
-            String characterName = entry.getKey();
-            List<String> lines = entry.getValue();
-
-            Fairy fairy = fairyRepository.findByName(characterName)
-                    .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
-            System.out.println("[요정 찾기 성공] " + fairy.getName());
-
-            for (String line : lines) {
-                FairyLine fairyLine = FairyLine.builder()
-                        .line(line)
+        if (fairies != null) {
+            for (Fairy fairy : fairies) {
+                FairyParticipation participation = FairyParticipation.builder()
                         .fairy(fairy)
+                        .fairyTale(fairyTale)
                         .build();
-                fairyLineRepository.save(fairyLine);
-                System.out.println("[대사 저장 완료] " + line);
+                fairyParticipationRepository.save(participation);
+                System.out.println("[요정 참여 정보 저장 완료] 요정 ID: " + fairy.getId());
             }
         }
+
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, fairyTale.getId());
     }
