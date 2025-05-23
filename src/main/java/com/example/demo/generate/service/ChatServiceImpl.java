@@ -341,6 +341,23 @@ public class ChatServiceImpl implements ChatService {
             }
 
 
+            // 결과 반환
+            String line = fairyLineRepository.findFirstByFairyId(fairy.getId())
+                    .map(FairyLine::getLine)
+                    .orElse("명대사 없음");
+
+            StoryEndResponse response = StoryEndResponse.builder()
+                    .fairyId(fairy.getId())
+                    .fairyLine(line)
+                    .name(fairy.getName())
+                    .age(fairy.getAge())
+                    .gender(fairy.getGender())
+                    .personality(fairy.getPersonality())
+                    .imageUrl(fairy.getFirstImage())
+                    .build();
+
+            return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
+
         }
         else {
             // 감정인식
@@ -357,7 +374,6 @@ public class ChatServiceImpl implements ChatService {
             return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
         }
 
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
     }
 
 
