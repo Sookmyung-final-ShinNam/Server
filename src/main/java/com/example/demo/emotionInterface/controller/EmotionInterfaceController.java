@@ -16,9 +16,9 @@ public class EmotionInterfaceController extends BaseController {
 
     // 1. text 에서 감정 인식 ( 웹뷰 )
 
-    @PostMapping("/text-emotion-interface")
+    @GetMapping("/text-emotion-interface")
     public ApiResponse<String> emotionInterface(@RequestParam String text) {
-        String userId = getCurrentUserId(); // 로그인 사용자 ID (임의로 "testUser"로 대체 가능)
+        String userId = getCurrentUserId();
         return emotionInterfaceService.emotionHtml(userId, text);
     }
 

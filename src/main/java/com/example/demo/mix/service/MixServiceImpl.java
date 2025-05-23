@@ -8,6 +8,7 @@ import com.example.demo.base.util.PromptLoader;
 import com.example.demo.domain.entity.*;
 import com.example.demo.domain.entity.enums.Type;
 import com.example.demo.domain.repository.*;
+import com.example.demo.emotionInterface.service.EmotionInterfaceService;
 import com.example.demo.mix.dto.MixFairyTaleRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -55,6 +56,9 @@ public class MixServiceImpl implements MixService {
 
     @Autowired
     private FairyRepository fairyRepository;
+
+    @Autowired
+    private EmotionInterfaceService emotionInterfaceService;
 
 
     @Override
@@ -145,9 +149,14 @@ public class MixServiceImpl implements MixService {
 
 // 5. Page 저장
         for (String scene : scenes) {
+
+            ApiResponse<String> response = emotionInterfaceService.emotionHtml(userId, scene);
+            String emotionText = response.getResult();
+
             Page page = Page.builder()
                     .plot(scene)
                     .fairyTale(fairyTale)
+                    .emotionText(emotionText)
                     .build();
             pageRepository.save(page);
             System.out.println("[장면 저장 완료] " + scene);

@@ -26,6 +26,7 @@ public class PageConverter {
                 .pageNo(seq)
                 .image(page.getImage())
                 .plot(page.getPlot())
+                .emotionText(page.getEmotionText())
                 .build();
     }
 }

@@ -9,6 +9,7 @@ import com.example.demo.domain.repository.FairyTaleRepository;
 import com.example.demo.domain.entity.Fairy;
 import com.example.demo.domain.entity.FairyTale;
 import com.example.demo.domain.entity.enums.Gender;
+import com.example.demo.emotionInterface.service.EmotionInterfaceService;
 import com.example.demo.generate.dto.FeedbackRequest;
 import com.example.demo.generate.dto.StoryFeedbackResult;
 import com.example.demo.generate.dto.StoryIntroRequest;
@@ -78,6 +79,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private FairyRepository fairyRepository;
+
+    @Autowired
+    private EmotionInterfaceService emotionInterfaceService;
 
 
     @Override
@@ -243,9 +247,14 @@ public class ChatServiceImpl implements ChatService {
             while (sceneMatcher.find()) {
                 String plot = sceneMatcher.group(1).trim();
                 if (!plot.isEmpty()) {
+
+                    ApiResponse<String> response = emotionInterfaceService.emotionHtml(userId, plot);
+                    String emotionText = response.getResult();
+
                     Page page = Page.builder()
                             .plot(plot)
                             .fairyTale(fairyTale)
+                            .emotionText(emotionText)
                             .build();
                     pages.add(page);
 

@@ -23,6 +23,10 @@ public class Page {
     @Column(length = 1000)
     private String plot;
 
+    // 감정 인식 텍스트
+    @Column(length = 1000)
+    private String emotionText;
+
     @ManyToOne
     @JoinColumn(name = "faryTale_id")
     @JsonBackReference
