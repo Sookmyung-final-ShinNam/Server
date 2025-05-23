@@ -1,5 +1,6 @@
 package com.example.demo.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,6 +22,7 @@ public class FairyLine {
 
     @ManyToOne
     @JoinColumn(name = "fairy_id")
+    @JsonBackReference
     private Fairy fairy;
 
 }

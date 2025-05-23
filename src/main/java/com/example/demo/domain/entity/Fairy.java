@@ -46,10 +46,12 @@ public class Fairy extends BaseEntity {
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<FairyLine> lines = new ArrayList<>();
 
     @OneToMany(mappedBy = "fairy", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<FairyImage> images = new ArrayList<>();
 
 

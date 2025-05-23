@@ -53,10 +53,12 @@ public class FairyTale extends BaseEntity {
 
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<PageDraft> pageDrafts = new ArrayList<>();
 
     @OneToMany(mappedBy = "fairyTale", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @JsonManagedReference
     private List<Page> pages = new ArrayList<>();
 
     public void updateFavoriteStatus(boolean status) {

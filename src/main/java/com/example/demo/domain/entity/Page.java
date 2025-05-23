@@ -1,5 +1,6 @@
 package com.example.demo.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +25,7 @@ public class Page {
 
     @ManyToOne
     @JoinColumn(name = "faryTale_id")
+    @JsonBackReference
     private FairyTale fairyTale;  // 등장한 동화
 
 }
