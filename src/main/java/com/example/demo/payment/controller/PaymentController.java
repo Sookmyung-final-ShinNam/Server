@@ -1,5 +1,10 @@
 package com.example.demo.payment.controller;
 
+import com.example.demo.base.BaseController;
+import com.example.demo.base.api.exception.CustomException;
+import com.example.demo.base.api.status.ErrorStatus;
+import com.example.demo.domain.entity.User;
+import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.payment.dto.ApproveResponse;
 import com.example.demo.payment.dto.PaymentConverter;
 import com.example.demo.payment.dto.PaymentRequest;
@@ -22,8 +27,8 @@ import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/api/permit/payment")
-public class PaymentController {
+@RequestMapping("/api")
+public class PaymentController extends BaseController {
 
     private final PaymentService paymentService;
     private final PaymentRepository paymentRepository;
@@ -35,7 +40,10 @@ public class PaymentController {
     @Value("${kakao.domain}")
     private String domain;
 
-    @GetMapping("/approve")
+    private final UserRepository userRepository;
+
+
+    @GetMapping("/permit/payment/approve")
     public String approvePayment(@RequestParam String pg_token, HttpServletRequest request) {
 
         // 쿠키에서 TID 값을 찾기
@@ -54,10 +62,21 @@ public class PaymentController {
         String redirectTarget = redirectUrl + "/?approvedAt=" + approveResponse.getApprovedAt().toString()
                 + "&approvedAmount=" + amount;
 
+
+        // 결제 성공시 포인트 증가
+
+        String userId = paymentRepository.findByTid(tid).get().getUserId();
+
+        User user = userRepository.findByEmail(userId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+        user.setPoint(user.getPoint() + amount);
+        userRepository.save(user);
+
+
         return "redirect:" + redirectTarget;
     }
 
-    @GetMapping("/redirect")
+    @GetMapping("/permit/payment/redirect")
     public String redirectPayment(@RequestParam String tid, @RequestParam String url, HttpServletResponse response) {
 
         // tid를 쿠키로 저장
@@ -75,11 +94,10 @@ public class PaymentController {
         return "redirect:" + url;
     }
 
-    @PostMapping("/create")
+    @PostMapping("/payment/create")
     public ResponseEntity<Map<String, String>> createPayment(@RequestParam String itemId, @RequestParam String itemName, @RequestParam int totalAmount) {
 
-        // 사용자 ID를 임시로 설정
-        String userId = "guest";
+        String userId = getCurrentUserId();  // 현재 로그인 된 사용자 ID
 
         PaymentRequest paymentRequest = PaymentConverter.toPaymentRequest(userId, itemId, itemName, totalAmount);
 

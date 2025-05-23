@@ -1,5 +1,6 @@
 package com.example.demo.login.security.jwt;
 
+import jakarta.servlet.http.Cookie;
 import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.api.status.ErrorStatus;
 import com.example.demo.domain.entity.Token;
@@ -51,6 +52,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String authorizationHeader = request.getHeader("Authorization");
         logger.debug("Authorization header: {}", authorizationHeader);
 
+        // Authorization 헤더가 없거나 Bearer로 시작하지 않을 경우 쿠키에서 복원
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            logger.debug("Authorization header is missing or invalid. Trying to retrieve token from cookie.");
+
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("token".equals(cookie.getName())) {
+                        authorizationHeader = "Bearer " + cookie.getValue();
+                        logger.debug("Recovered Authorization header from cookie: {}", authorizationHeader);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 여전히 Authorization이 없으면 예외 발생
         try {
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 throwException(ErrorStatus.TOKEN_MISSING);

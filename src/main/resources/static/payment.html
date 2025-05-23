@@ -87,7 +87,6 @@
 
 <div class="points" id="pointsText">내 포인트: 0p</div>
 
-<!-- 상품 목록 -->
 <div class="item">
     <h2>도토리 300개</h2>
     <p>포인트: 300p</p>
@@ -106,12 +105,14 @@
     <button onclick="purchase('item1000', '도토리 1000개', 1000)">구매하기</button>
 </div>
 
-
 <script>
     function purchase(itemId, itemName, totalAmount) {
-        fetch("/api/permit/payment/create", {
+        fetch("/api/payment/create", {
             method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Authorization": "Bearer " + window.authToken
+            },
             body:
                 "itemId=" + encodeURIComponent(itemId) +
                 "&itemName=" + encodeURIComponent(itemName) +
