@@ -10,10 +10,7 @@ import com.example.demo.domain.entity.Fairy;
 import com.example.demo.domain.entity.FairyTale;
 import com.example.demo.domain.entity.enums.Gender;
 import com.example.demo.emotionInterface.service.EmotionInterfaceService;
-import com.example.demo.generate.dto.FeedbackRequest;
-import com.example.demo.generate.dto.StoryFeedbackResult;
-import com.example.demo.generate.dto.StoryIntroRequest;
-import com.example.demo.generate.dto.StoryRequest;
+import com.example.demo.generate.dto.*;
 import com.example.demo.domain.entity.Page;
 import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.api.exception.CustomException;
@@ -166,7 +163,21 @@ public class ChatServiceImpl implements ChatService {
         // 6. DB 저장 (Repository 호출)
         fairyTaleRepository.save(fairyTale);
 
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
+
+
+        // 감정인식
+        bodyTemplate = promptLoader.loadPrompt("group_words_by_emotion.json");
+        body = bodyTemplate.replace("{text}", answer);
+
+        String answer2 = callChatGpt(body); // 이 answer는 HTML 일부가 포함된 문자열
+
+        StoryIntroResponse response = StoryIntroResponse.builder()
+                .plot(answer)
+                .emotionText(answer2)
+                .build();
+
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
     }
 
     @Override
@@ -330,6 +341,20 @@ public class ChatServiceImpl implements ChatService {
             }
 
 
+        }
+        else {
+            // 감정인식
+            bodyTemplate = promptLoader.loadPrompt("group_words_by_emotion.json");
+            body = bodyTemplate.replace("{text}", answer);
+
+            String answer2 = callChatGpt(body); // 이 answer는 HTML 일부가 포함된 문자열
+
+            NextStoryResponse response = NextStoryResponse.builder()
+                    .plot(answer)
+                    .emotionText(answer2)
+                    .build();
+
+            return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
         }
 
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, answer);
