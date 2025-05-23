@@ -34,14 +34,14 @@ public class FairyController extends BaseController {
 
     // 나의 요정 조회
     @GetMapping("/{fairyId}")
-    public ApiResponse<?> getMyFairy(@RequestParam Long fairyId) {
+    public ApiResponse<?> getMyFairy(@PathVariable Long fairyId) {
         String userId = getCurrentUserId();
         return fairyService.getMyFairy(userId, fairyId);
     }
 
     // 즐겨찾기 on/off
     @PatchMapping("/{fairyId}")
-    public ApiResponse<?> updateFavoriteStatus(@RequestParam Long fairyId) {
+    public ApiResponse<?> updateFavoriteStatus(@PathVariable Long fairyId) {
         String userId = getCurrentUserId();
         return fairyService.updateFavoriteStatus(userId, fairyId);
     }

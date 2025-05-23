@@ -40,7 +40,7 @@ public class FairyTaleController extends BaseController {
 
     // 즐겨찾기 on/off
     @PatchMapping("/{fairyId}")
-    public ApiResponse<?> updateFavoriteStatus(@RequestParam Long fairyId) {
+    public ApiResponse<?> updateFavoriteStatus(@PathVariable Long fairyId) {
         String userId = getCurrentUserId();
         return fairyTaleService.updateFavoriteStatus(userId, fairyId);
     }

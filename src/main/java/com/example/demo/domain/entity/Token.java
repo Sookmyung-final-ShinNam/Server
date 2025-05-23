@@ -1,5 +1,6 @@
 package com.example.demo.domain.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ public class Token extends BaseEntity {
 
     @OneToOne
     @JoinColumn(name = "user_id") // User와의 일대일 관계를 설정
+    @JsonIgnore
     private User user;
 
 }
