@@ -53,13 +53,26 @@ public class Fairy extends BaseEntity {
     private List<FairyImage> images = new ArrayList<>();
 
 
-    // firstImage 초기화
-    public void setFirstImage() {
-        if (images != null && images.isEmpty()) {
-            this.firstImage = images.get(0).getImage();
-        } else {
-            this.firstImage = null;
+    public String getHairColor() {
+        return getAppearanceComponent(0);
+    }
+
+    public String getEyeColor() {
+        return getAppearanceComponent(1);
+    }
+
+    public String getHairStyle() {
+        return getAppearanceComponent(2);
+    }
+
+    private String getAppearanceComponent(int index) {
+        if (appearance != null && !appearance.isBlank()) {
+            String[] parts = appearance.trim().split("\\s+");
+            if (parts.length > index) {
+                return parts[index];
+            }
         }
+        return "정보 없음";
     }
 
     public void updateFavoriteStatus(boolean status) {
