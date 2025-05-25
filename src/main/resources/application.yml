@@ -1,0 +1,101 @@
+# 공통 URL 관리
+domain: "${DOMAIN}"
+base-url: "https://${DOMAIN}"
+redirect-url: "${REDIRECT_URL}"
+
+withdrawn:
+  delete-time: 60
+  check-time: 30
+
+# 포트 설정
+server:
+  ssl:
+    key-store: "${KEY_STORE}"
+    key-store-type: "${KEY_STORE_TYPE}"
+    key-store-password: "${KEY_STORE_PASS}"
+    port: 443
+
+logging:
+  level:
+    root: INFO          # 전체 로그 레벨
+    com.example: DEBUG  # 내 프로젝트 패키지 기준으로 DEBUG까지 출력
+
+
+# spring 설정들
+spring:
+  web:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+  # 기본 시간대 설정 ( 베이스 엔티티에는 미적용 상태 )
+  time-zone: Asia/Seoul
+
+  # DB
+  datasource:
+    url: jdbc:mysql://yoondb.cf2gswe6oye0.ap-northeast-2.rds.amazonaws.com/yoondb?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: "${DB_USERNAME}"
+    password: "${DB_PASSWORD}"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # jpa 설정
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+    security:
+      enable-csrf: false
+
+  # jwt 설정
+  jwt:
+    secret: "${JWT_SECRET}"
+    expiration:
+      access-token: 3600  # 1 day
+      refresh-token: 604800  # 7 days
+
+  # 소셜 로그인 설정
+  security:
+    oauth2:
+      client:
+        kakao-path-uri: "/authorization/oauth2/code/kakao"
+
+        registration:
+          kakao:
+            client-id: "${KAKAO_CLIENT_ID}"
+            client-secret: "${KAKAO_CLIENT_SECRET}"
+            authorization-grant-type: authorization_code
+            redirect-uri: ${base-url}/authorization/oauth2/code/kakao
+            scope:
+              - account_email
+              - profile_nickname
+            client-name: Kakao
+            client-authentication-method: client_secret_post
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+
+# chat gpt API
+chatgpt:
+  api-key: "${GPT_API_KEY}"
+
+
+# kakao pay API
+kakao:
+  base-url: "${base-url}"
+  redirect-url: "${base-url}/paySuccess.html"
+  domain: "${domain}"
+  pay:
+    cid: "${KAKAOPAY_CID}"
+    secretKey: "${KAKAOPAY_PASS}"
+    approvalUrl: "${base-url}/api/permit/payment/approve" # 결제 승인시 리다이렉트 url
+    cancelUrl: "${base-url}/api/permit/payment/cancel" # 결제 취소시 리다이렉트 url
+    failUrl: "${base-url}/api/permit/payment/fail" # 결제 실패시 리다이렉트 url
