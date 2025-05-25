@@ -10,6 +10,7 @@ import com.example.demo.domain.entity.enums.Type;
 import com.example.demo.domain.repository.*;
 import com.example.demo.emotionInterface.service.EmotionInterfaceService;
 import com.example.demo.mix.dto.MixFairyTaleRequest;
+import com.example.demo.mix.dto.MixResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -180,7 +181,13 @@ public class MixServiceImpl implements MixService {
         userRepository.save(user);
 
 
-        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, fairyTale.getId());
+        MixResponse response = MixResponse.builder()
+                .title(title)
+                .content(scenes.isEmpty() ? "" : scenes.get(0))  // 첫 장면
+                .build();
+
+
+        return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
     }
 
 
@@ -225,7 +232,6 @@ public class MixServiceImpl implements MixService {
 
 
 
-    // 공통 부분 : gpt 호출
     // 공통 부분 : gpt 호출
     public String callChatGpt(String finalPromptJson) {
         HttpURLConnection conn = null;
