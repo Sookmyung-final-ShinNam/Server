@@ -17,7 +17,7 @@ public class SwaggerConfig {
 
         Info apiInfo = new Info()
                 .title("장신남 졸프 API")
-                .description("장신남 졸프 API 명세서")
+                .description("장신남 졸프 API 명세서 - 배포 완료")
                 .version("1.0.0");
 
         String jwtSchemeName = "JWT_TOKEN";
