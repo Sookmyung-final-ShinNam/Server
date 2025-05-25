@@ -20,11 +20,11 @@ public class Page {
     private String image;
 
     // 줄거리
-    @Column(length = 1000)
+    @Column(length = 3000)
     private String plot;
 
     // 감정 인식 텍스트
-    @Column(length = 1000)
+    @Column(length = 3000)
     private String emotionText;
 
     @ManyToOne

@@ -178,6 +178,10 @@ public class ChatServiceImpl implements ChatService {
                 .build();
 
 
+        // 포인트 차감
+        user.setPoint(user.getPoint() - 200);
+        userRepository.save(user);
+
         return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
     }
 
