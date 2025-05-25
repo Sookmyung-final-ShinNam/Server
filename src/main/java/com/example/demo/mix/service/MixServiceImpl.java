@@ -182,6 +182,7 @@ public class MixServiceImpl implements MixService {
 
 
         MixResponse response = MixResponse.builder()
+                .fairyTaleId(fairyTale.getId())
                 .title(title)
                 .content(scenes.isEmpty() ? "" : scenes.get(0))  // 첫 장면
                 .build();
