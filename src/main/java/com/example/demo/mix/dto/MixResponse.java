@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class MixResponse {
+    private Long fairyTaleId;
     private String title;
     private String content;
 }
