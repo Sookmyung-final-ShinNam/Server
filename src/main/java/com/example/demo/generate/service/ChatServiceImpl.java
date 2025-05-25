@@ -172,6 +172,7 @@ public class ChatServiceImpl implements ChatService {
         String answer2 = callChatGpt(body); // 이 answer는 HTML 일부가 포함된 문자열
 
         StoryIntroResponse response = StoryIntroResponse.builder()
+                .fairyTaleId(fairyTale.getId())
                 .plot(answer)
                 .emotionText(answer2)
                 .build();

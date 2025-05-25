@@ -9,6 +9,7 @@ import java.util.List;
 @Getter
 @Builder
 public class StoryIntroResponse {
+    private Long fairyTaleId;
     private String plot;
     private String emotionText;
 }
