@@ -41,7 +41,8 @@ public class MainService {
         User user = userRepository.findByEmail(userId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
-        user.setMaxFairyNum(user.getMaxFairyTaleNum() + 1);
+        user.setMaxFairyNum(user.getMaxFairyNum() + 1);
+        user.setPoint(user.getPoint() - 300);
         userRepository.save(user);
 
         return ApiResponse.of(SuccessStatus.FAIRY_MAX_NUM_INCREASED, user.getMaxFairyNum());
@@ -52,6 +53,7 @@ public class MainService {
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
         user.setMaxFairyTaleNum(user.getMaxFairyTaleNum() +1);
+        user.setPoint(user.getPoint() - 300);
         userRepository.save(user);
 
         return ApiResponse.of(SuccessStatus.FAIRY_TALE_MAX_NUM_INCREASED, user.getMaxFairyTaleNum());
