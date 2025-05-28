@@ -1,7 +1,6 @@
 package com.example.demo.extra.fairyTale.dto;
 
 import com.example.demo.domain.entity.FairyTale;
-import com.example.demo.domain.entity.Participation;
 
 import java.util.List;
 import java.util.stream.Collectors;
