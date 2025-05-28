@@ -36,4 +36,27 @@ public class MainService {
 
         return ApiResponse.of(SuccessStatus.USER_INFO_RETRIEVED, UserConverter.toUserInfo(user, fairies));
     }
+
+    public ApiResponse<?> increaseMaxFairyCount(String userId) {
+        User user = userRepository.findByEmail(userId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        user.setMaxFairyNum(user.getMaxFairyTaleNum() + 1);
+        userRepository.save(user);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_MAX_NUM_INCREASED, user);
+    }
+
+    public ApiResponse<?> increaseMaxStoryCount(String userId) {
+        User user = userRepository.findByEmail(userId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+
+        user.setMaxFairyTaleNum(user.getMaxFairyTaleNum() +1);
+        userRepository.save(user);
+
+        return ApiResponse.of(SuccessStatus.FAIRY_TALE_MAX_NUM_INCREASED, user);
+    }
+
+
+
 }
