@@ -12,7 +12,7 @@ public class FairyTaleConverter {
     public static MyFairyTaleResponse toMyFairyTaleResponse(FairyTale fairyTale) {
         // 테마 해시태그 리스트화
         List<String> hashtags = toHashtags(fairyTale);
-        List<String> participants = ParticipantConverter.toFairyNames(fairyTale);
+        List<ParticipantResponse> participants = ParticipantConverter.toFairyNames(fairyTale);
         List<PageResponse> pages = PageConverter.toPages(fairyTale);
 
         return MyFairyTaleResponse.builder()

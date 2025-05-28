@@ -62,6 +62,7 @@ public class FairyConverter {
         return FairyTaleInfoResponse.builder()
                 .id(participation.getFairyTale().getId())
                 .title(participation.getFairyTale().getTitle())
+                .type(participation.getFairyTale().getType())
                 .build();
     }
 

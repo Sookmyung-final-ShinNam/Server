@@ -1,5 +1,6 @@
 package com.example.demo.extra.fairyTale.dto;
 
+import com.example.demo.domain.entity.enums.Type;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,6 +15,6 @@ public class MyFairyTaleResponse {
     private String content;
     private boolean isFavorite;
     private List<String> hashtags;
-    private List<String> participants;
+    private List<ParticipantResponse> participants;
     private List<PageResponse> pages;
 }
