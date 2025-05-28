@@ -44,7 +44,7 @@ public class MainService {
         user.setMaxFairyNum(user.getMaxFairyTaleNum() + 1);
         userRepository.save(user);
 
-        return ApiResponse.of(SuccessStatus.FAIRY_MAX_NUM_INCREASED, user);
+        return ApiResponse.of(SuccessStatus.FAIRY_MAX_NUM_INCREASED, user.getMaxFairyNum());
     }
 
     public ApiResponse<?> increaseMaxStoryCount(String userId) {
@@ -54,7 +54,7 @@ public class MainService {
         user.setMaxFairyTaleNum(user.getMaxFairyTaleNum() +1);
         userRepository.save(user);
 
-        return ApiResponse.of(SuccessStatus.FAIRY_TALE_MAX_NUM_INCREASED, user);
+        return ApiResponse.of(SuccessStatus.FAIRY_TALE_MAX_NUM_INCREASED, user.getMaxFairyTaleNum());
     }
 
 
