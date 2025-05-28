@@ -35,12 +35,14 @@ public enum SuccessStatus implements BaseCode {
     FAIRY_RETRIEVED(HttpStatus.OK, "FAIRY_2000", "요정이 성공적으로 조회되었습니다."),
     FAIRY_UPDATED(HttpStatus.CREATED, "FAIRY_2002", "요정이 성공적으로 수정되었습니다."),
     FAIRY_LIST_RETRIEVED(HttpStatus.OK, "FAIRY_2001", "요정 목록이 성공적으로 조회되었습니다."),
+    FAIRY_MAX_NUM_INCREASED(HttpStatus.OK, "FAIRY_2100", "요정의 최대 갯수가 성공적으로 증가되었습니다."),
 
     // 동화 관련 성공 응답
     FAIRY_TALE_CREATED(HttpStatus.CREATED, "FAIRY_TALE_2010", "동화가 성공적으로 생성되었습니다."),
     FAIRY_TALE_LIST_RETRIEVED(HttpStatus.OK, "FAIRY_TALE_2000", "동화 목록이 성공적으로 조회되었습니다."),
     FAIRY_TALE_UPDATED(HttpStatus.OK, "FAIRY_TALE_2001", "동화가 성공적으로 수정되었습니다."),
-    FAIRY_TALE_CONTENT_RETRIEVED(HttpStatus.OK, "FAIRY_TALE_2002", "동화 내용이 성공적으로 조회되었습니다.")
+    FAIRY_TALE_CONTENT_RETRIEVED(HttpStatus.OK, "FAIRY_TALE_2002", "동화 내용이 성공적으로 조회되었습니다."),
+    FAIRY_TALE_MAX_NUM_INCREASED(HttpStatus.OK, "FAIRY_TALE_2100", "동화의 최대 갯수가 성공적으로 증가되었습니다.")
 
 
     ;
