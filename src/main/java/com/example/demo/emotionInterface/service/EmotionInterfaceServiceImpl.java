@@ -33,7 +33,7 @@ public class EmotionInterfaceServiceImpl implements EmotionInterfaceService {
 
     @Override
     public ApiResponse  emotionHtml(String userId, String text) {
-        String bodyTemplate = promptLoader.loadPrompt("group_words_by_emotion_font-image.json");
+        String bodyTemplate = promptLoader.loadPrompt("group_words_by_emotion.json");
         String body = bodyTemplate.replace("{text}", text);
 
         String answer = callChatGpt(body); // 이 answer는 HTML 일부가 포함된 문자열
