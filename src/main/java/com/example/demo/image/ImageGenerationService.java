@@ -264,9 +264,10 @@ public class ImageGenerationService {
                 "model": "dall-e-3",
                 "prompt": "%s",
                 "n": 1,
-                "size": "512x512"
+                "size": "1024x1024"
             }
-        """, prompt.replace("\"", "\\\""));  // 따옴표 이스케이프
+            """, prompt.replace("\"", "\\\""));
+
 
             try (OutputStream os = conn.getOutputStream()) {
                 byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
