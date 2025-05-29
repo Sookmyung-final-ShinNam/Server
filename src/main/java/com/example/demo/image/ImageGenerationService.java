@@ -51,18 +51,14 @@ public class ImageGenerationService {
     private final PageRepository pageRepository;
     private final PromptLoader promptLoader;
 
-
     @Value("${chatgpt.api-key}")
     private String apiKey;
 
-
-    // 외형 + 스타일 고정
     private static final String BASE_PROMPT = "a wholesome, child-safe, kindergarten-aged cartoon character, "
             + "in a long-sleeved pastel clothes, wearing tights and shoes, "
             + "friendly and cute, colorful fairytale style, full body, "
             + "Studio Ghibli style, white background";
 
-    // 부적절하거나 품질이 낮은 요소 제거
     private static final String NEGATIVE_PROMPT = String.join(", ",
             "nsfw", "nude", "naked", "lingerie", "swimsuit", "cleavage", "breasts",
             "exposed skin", "revealing outfit", "tight clothes", "suggestive pose", "sexualized",
@@ -71,127 +67,246 @@ public class ImageGenerationService {
             "creepy", "dark shadows");
 
     public ApiResponse<?> getMyFairies(String userId, ImageRequestDto dto) {
-
         System.out.println("🟡 이미지 생성 시작");
 
-        Fairy fairy = fairyRepository.findById(dto.getFairyId())
-                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+        // 1. 데이터 조회 및 검증
+        Fairy fairy = getFairy(dto.getFairyId());
+        validateUser(userId);
+        FairyTale fairyTale = getFairyTale(dto.getFairyTaleId());
+        List<Page> pages = pageRepository.findByFairyTale(fairyTale);
+        List<String> plots = extractPlots(pages);
 
+        // 2. 행동 리스트 생성 (기본 + 줄거리)
+        List<String> behaviors = createBehaviorsList(plots);
+
+        // 3. 외형 GPT 프롬프트 생성 및 호출
+        String appearancePrompt = createAppearancePrompt(fairy);
+        String appearance = callChatGpt(appearancePrompt);
+
+        // 4. 이미지 생성 및 업로드
+        List<String> uploadedImageUrls = generateAndUploadImages(behaviors, appearance);
+
+        // 5. DB 저장 처리
+        saveImagesToDatabase(fairy, pages, uploadedImageUrls);
+
+        return ApiResponse.of(SuccessStatus._OK, uploadedImageUrls);
+    }
+
+    private Fairy getFairy(Long fairyId) {
+        return fairyRepository.findById(fairyId)
+                .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
+    }
+
+    private void validateUser(String userId) {
         userRepository.findByEmail(userId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
+    }
 
-        FairyTale fairyTale = fairyTaleRepository.findById(dto.getFairyTaleId())
+    private FairyTale getFairyTale(Long fairyTaleId) {
+        return fairyTaleRepository.findById(fairyTaleId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
+    }
 
-        List<Page> pages = pageRepository.findByFairyTale(fairyTale);
-
-        List<String> plots = pages.stream()
+    private List<String> extractPlots(List<Page> pages) {
+        return pages.stream()
                 .map(Page::getPlot)
                 .filter(Objects::nonNull)
                 .toList();
+    }
 
-        List<String> uploadedImageUrls = new ArrayList<>();
-
-        // 기본 동작 (첫 번째 기본 이미지)
+    private List<String> createBehaviorsList(List<String> plots) {
         List<String> behaviors = new ArrayList<>();
-        behaviors.add("");
-
-        // 나머지는 줄거리를 가져옴.
+        behaviors.add("");  // 첫 기본 이미지용 빈 문자열
         behaviors.addAll(plots);
+        return behaviors;
+    }
 
-        // 외형 gpt
+    private String createAppearancePrompt(Fairy fairy) {
         String bodyTemplate = promptLoader.loadPrompt("img_appearance.json");
-        String body = bodyTemplate
+        return bodyTemplate
                 .replace("{eye color}", fairy.getEyeColor())
                 .replace("{hair color}", fairy.getHairColor())
                 .replace("{hair style}", fairy.getHairStyle())
                 .replace("{gender}", fairy.getGender().toString())
                 .replace("{personality}", fairy.getPersonality())
                 .replace("{age}", fairy.getAge().toString());
-        String appearance = callChatGpt(body);
+    }
 
-        // 동화 프롬프트 불러오기
-        bodyTemplate = promptLoader.loadPrompt("img_story.json");
+    private List<String> generateAndUploadImages(List<String> behaviors, String appearance) {
+        List<String> uploadedImageUrls = new ArrayList<>();
+        String bodyTemplate = promptLoader.loadPrompt("img_story.json");
 
         for (String behavior : behaviors) {
-
-            // GPT 로 줄거리 재구성
-            body = bodyTemplate.replace("{plot}", behavior);
-            String answer = callChatGpt(body);
+            String storyPrompt = bodyTemplate.replace("{plot}", behavior);
+            String storyAnswer = callChatGpt(storyPrompt);
 
             // 프롬프트 구성
-            String fullPrompt = BASE_PROMPT + ", " + appearance + ", " + answer;
+            String fullPrompt = BASE_PROMPT + ", " + appearance + ", " + storyAnswer;
             System.out.println("📌 프롬프트 구성 완료: " + fullPrompt);
 
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("prompt", fullPrompt);
-            payload.put("negative_prompt", NEGATIVE_PROMPT);
-            payload.put("steps", 30);
-            payload.put("sampler_name", "DPM++ 2M");
-            payload.put("scheduler", "Karras");
-            payload.put("cfg_scale", 7);
-            payload.put("width", 540);
-            payload.put("height", 540);
+            // 이미지 url
+            String imageResult = null;
 
-            // ✅ 외형 고정: seed 고정
-            payload.put("seed", 123456789L);
-            payload.put("enable_hr", false);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+            // 이미지 생성 (1이면 모델, 2이면 gpt)
+            int modelType = 2; // gpt 시도 중
 
-            String url = "https://fa83fab18e45.ngrok.app/sdapi/v1/txt2img";
-            System.out.println("🔁 API 요청 전송 중...");
-            ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
-            System.out.println("✅ 응답 수신 완료");
+            if (modelType == 1) {
+                // 기존 모델 (Base64 반환)
+                imageResult = requestImageGeneration(fullPrompt);
+                if (imageResult == null) {
+                    System.out.println("❌ 이미지 생성 실패 (기존 모델)");
+                    continue;
+                }
+                String s3Url = uploadImageToS3(imageResult);
+                uploadedImageUrls.add(s3Url);
+            }
+            else if (modelType == 2) {
+                // GPT API (URL 반환)
+                String gptImageUrl = generateImageWithGptApi(fullPrompt);
+                if (gptImageUrl == null) {
+                    System.out.println("❌ 이미지 생성 실패 (GPT API)");
+                    continue;
+                }
+                uploadedImageUrls.add(gptImageUrl);
 
-            List<String> images = (List<String>) response.getBody().get("images");
-            if (images == null || images.isEmpty()) {
-                System.out.println("❌ 이미지 생성 실패");
-                continue;
+            } else {
+                System.out.println("❌ 알 수 없는 모델 타입: " + modelType);
+                break;
             }
 
-            String base64Image = images.get(0).split(",").length > 1 ?
-                    images.get(0).split(",")[1] : images.get(0);
-
-            byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-
-            MultipartFile multipartFile = new MockMultipartFile(
-                    "file",
-                    UUID.randomUUID() + ".png",
-                    MediaType.IMAGE_PNG_VALUE,
-                    imageBytes
-            );
-
-            ApiResponse<FileDTO> uploadResponse = fileService.uploadFile(
-                    "characters",
-                    multipartFile.getOriginalFilename(),
-                    multipartFile
-            );
-
-            uploadedImageUrls.add(uploadResponse.getResult().getS3Url());
         }
 
-        // 첫 이미지는 기본 프로필 이미지로 저장
-        if (!uploadedImageUrls.isEmpty()) {
-            fairy.setFirstImage(uploadedImageUrls.get(0));
+        return uploadedImageUrls;
+    }
+
+    private String requestImageGeneration(String prompt) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("prompt", prompt);
+        payload.put("negative_prompt", NEGATIVE_PROMPT);
+        payload.put("steps", 30);
+        payload.put("sampler_name", "DPM++ 2M");
+        payload.put("scheduler", "Karras");
+        payload.put("cfg_scale", 7);
+        payload.put("width", 540);
+        payload.put("height", 540);
+        payload.put("seed", 123456789L); // 고정 seed로 외형 고정
+        payload.put("enable_hr", false);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+        String url = "https://fa83fab18e45.ngrok.app/sdapi/v1/txt2img";
+        System.out.println("🔁 API 요청 전송 중...");
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+        System.out.println("✅ 응답 수신 완료");
+
+        List<String> images = (List<String>) response.getBody().get("images");
+        if (images == null || images.isEmpty()) {
+            return null;
+        }
+
+        String base64Image = images.get(0).split(",").length > 1 ? images.get(0).split(",")[1] : images.get(0);
+        return base64Image;
+    }
+
+    private String uploadImageToS3(String base64Image) {
+        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+
+        MultipartFile multipartFile = new MockMultipartFile(
+                "file",
+                UUID.randomUUID() + ".png",
+                MediaType.IMAGE_PNG_VALUE,
+                imageBytes
+        );
+
+        ApiResponse<FileDTO> uploadResponse = fileService.uploadFile(
+                "characters",
+                multipartFile.getOriginalFilename(),
+                multipartFile
+        );
+
+        return uploadResponse.getResult().getS3Url();
+    }
+
+    private void saveImagesToDatabase(Fairy fairy, List<Page> pages, List<String> imageUrls) {
+        if (!imageUrls.isEmpty()) {
+            fairy.setFirstImage(imageUrls.get(0));
             fairyRepository.save(fairy);
         }
 
-        // 나머지 이미지를 페이지에 매핑
-        if (uploadedImageUrls.size() > 1) {
-            for (int i = 1; i < uploadedImageUrls.size(); i++) {
+        if (imageUrls.size() > 1) {
+            for (int i = 1; i < imageUrls.size(); i++) {
                 if (i - 1 < pages.size()) {
-                    Page page = pages.get(i - 1);
-                    page.setImage(uploadedImageUrls.get(i));
+                    pages.get(i - 1).setImage(imageUrls.get(i));
                 }
             }
             pageRepository.saveAll(pages);
         }
-
-        return ApiResponse.of(SuccessStatus._OK, uploadedImageUrls);
     }
+
+    // gpt api - 이미지 생성
+    public String generateImageWithGptApi(String prompt) {
+        try {
+            String urlStr = "https://api.openai.com/v1/images/generations";
+            URL url = new URL(urlStr);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+            // GPT 이미지 생성 API 요청 바디
+            String requestBody = String.format("""
+            {
+                "model": "dall-e-3",
+                "prompt": "%s",
+                "n": 1,
+                "size": "1024x1024"
+            }
+            """, prompt.replace("\"", "\\\""));
+
+
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line.trim());
+                    }
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode json = mapper.readTree(response.toString());
+                    // 이미지 URL을 반환
+                    String imageUrl = json.get("data").get(0).get("url").asText();
+                    // 여기선 Base64가 아니라 외부 URL 반환임
+                    return imageUrl;
+                }
+            } else {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        errorResponse.append(line.trim());
+                    }
+                    log.error("GPT 이미지 생성 실패 응답 코드: {}, 메시지: {}", responseCode, errorResponse.toString());
+                }
+                return null;
+            }
+        } catch (IOException e) {
+            log.error("GPT 이미지 생성 중 예외 발생: {}", e.getMessage());
+            return null;
+        }
+    }
+
+
 
     // 공통 부분 : gpt 호출
     public String callChatGpt(String finalPromptJson) {

@@ -17,6 +17,7 @@ public class Page {
     private Long id;
 
     // 이미지
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     // 줄거리
