@@ -78,7 +78,7 @@ public class ImageGenerationService {
 
         // 동작 리스트 생성 (첫 번째는 기본값)
         List<String> behaviors = new ArrayList<>();
-        behaviors.add("손을 들고 있음");
+        behaviors.add("A young girl stands facing forward, raising one hand high with a bright smile, as if waving hello or asking a question.");
         behaviors.addAll(plots);
 
         for (String behavior : behaviors) {
@@ -134,7 +134,25 @@ public class ImageGenerationService {
             uploadedImageUrls.add(uploadResponse.getResult().getS3Url());  // 혹은 필요한 데이터
         }
 
+        // ✅ 첫 번째 이미지는 요정의 기본 이미지로 저장
+        if (!uploadedImageUrls.isEmpty()) {
+            fairy.setFirstImage(uploadedImageUrls.get(0));
+            fairyRepository.save(fairy);
+        }
+
+        // ✅ 이후 이미지들을 페이지에 순서대로 매핑
+        if (uploadedImageUrls.size() > 1) {
+            for (int i = 1; i < uploadedImageUrls.size(); i++) {
+                if (i - 1 < pages.size()) {
+                    Page page = pages.get(i - 1); // i=1부터 시작하므로 index 맞추기
+                    page.setImage(uploadedImageUrls.get(i));
+                }
+            }
+            pageRepository.saveAll(pages);
+        }
+
         return ApiResponse.of(SuccessStatus._OK, uploadedImageUrls);
+
     }
 
 
