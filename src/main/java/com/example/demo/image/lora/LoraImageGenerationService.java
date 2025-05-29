@@ -1,4 +1,4 @@
-package com.example.demo.image;
+package com.example.demo.image.lora;
 
 import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.api.exception.CustomException;
@@ -41,7 +41,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ImageGenerationService {
+public class LoraImageGenerationService {
 
     private final RestTemplate restTemplate;
     private final FileService fileService;
@@ -66,7 +66,7 @@ public class ImageGenerationService {
             "bad anatomy", "poorly drawn hands", "extra limbs", "blurry", "low quality", "scary",
             "creepy", "dark shadows");
 
-    public ApiResponse<?> getMyFairies(String userId, ImageRequestDto dto) {
+    public ApiResponse<?> getMyFairies(String userId, LoraImageRequestDto dto) {
         System.out.println("🟡 이미지 생성 시작");
 
         // 1. 데이터 조회 및 검증
