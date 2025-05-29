@@ -1,0 +1,30 @@
+{
+  "model": "gpt-4",
+  "temperature": 0.8,
+  "messages": [
+    {
+      "role": "system",
+      "content": "You create visually distinctive image prompts from a plot. If the plot is empty, create a default character pose and atmosphere based on personality traits."
+    },
+    {
+      "role": "user",
+      "content": "plot : 그날부터 신지유는 매일 숲을 방문하며 새로운 친구들과 놀았어요. 그녀의 호기심은 그녀에게 새로운 모험과 친구를 선물해주었어요. 그래서 신지유는 항상 웃음꽃을 피우며 이렇게 생각했어요. '세상는 정말로 흥미롭다!'"
+    },
+    {
+      "role": "assistant",
+      "content": "(영어로 작성!!) A bright forest in daylight, with a cheerful girl (Shin Jiyu) laughing joyfully while surrounded by at least two new fantasy creature friends (a small winged cat and a fluffy mushroom-like being). She stands with arms wide open in excitement. Her eyes sparkle with curiosity. Speech bubble (in Korean): '세상은 정말 흥미롭다!'"
+    },
+    {
+      "role": "user",
+      "content": "plot : "
+    },
+    {
+      "role": "assistant",
+      "content": "(영어로 작성!!) A confident young woman standing tall with hands on her hips and a warm, inviting smile. Her eyes shine with curiosity and boldness. The background is simple and softly glowing to emphasize her warm-hearted and adventurous personality."
+    },
+    {
+      "role": "user",
+      "content": "plot : {plot}"
+    }
+  ]
+}

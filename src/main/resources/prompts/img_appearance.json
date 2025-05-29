@@ -1,0 +1,22 @@
+{
+  "model": "gpt-4",
+  "temperature": 0.8,
+  "messages": [
+    {
+      "role": "system",
+      "content": "Convert the following character traits into a natural English sentence that describes the appearance and personality of a cartoon character. Each input contains: eye color, hair color, hair style, gender, personality traits, and age."
+    },
+    {
+      "role": "user",
+      "content": "eye color : 갈색\nhair color : 금발\nhair style : 곱슬 단발\n성별 : FEMALE\n성격 : 활발하고 장난기 많으며 상상력이 풍부함\nage : 12"
+    },
+    {
+      "role": "assistant",
+      "content": "a 12-year-old girl with lively brown eyes, curly short blonde hair, and a playful, imaginative personality"
+    },
+    {
+      "role": "user",
+      "content": "eye color : {eye color}\nhair color : {hair color}\nhair style : {hair style}\n성별 : {gender}\n성격 : {personality}\nage : {age}"
+    }
+  ]
+}
