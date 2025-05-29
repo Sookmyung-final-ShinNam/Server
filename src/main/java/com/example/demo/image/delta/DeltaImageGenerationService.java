@@ -35,7 +35,7 @@ public class DeltaImageGenerationService {
         characterDescriptions.put("유민", "검은 뿔테 안경, 깔끔한 파란 셔츠를 입고 진지한 표정을 짓는 어린이");
 
         // 2. 캐릭터 이미지 생성
-        Map<String, String> characterImages = generateCharacterImages(characterDescriptions);
+        // Map<String, String> characterImages = generateCharacterImages(characterDescriptions);
 
         // 3. 행동 장면 이미지 생성
         String scenePrompt = generateScenePrompt(characterDescriptions);
@@ -43,7 +43,6 @@ public class DeltaImageGenerationService {
 
         // 결과 반환
         Map<String, Object> result = new HashMap<>();
-        result.put("characterImages", characterImages);
         result.put("sceneImage", sceneImageUrl);
         return ApiResponse.of(SuccessStatus._OK, result);
     }

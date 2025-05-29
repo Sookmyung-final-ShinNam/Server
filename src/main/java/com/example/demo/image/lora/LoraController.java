@@ -15,7 +15,7 @@ public class LoraController extends BaseController {
     private LoraImageGenerationService imageGenerationService;
 
     // 1번 기능 : 요정 이미지 & 탄생 동화 이미지
-    @GetMapping("/fairy")
+    @GetMapping("/lora")
     public ApiResponse<?> getMyFairies(LoraImageRequestDto requestDto) {
         String userId = getCurrentUserId();
 
