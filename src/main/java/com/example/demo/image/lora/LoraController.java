@@ -19,7 +19,7 @@ public class LoraController extends BaseController {
     public ApiResponse<?> getMyFairies(LoraImageRequestDto requestDto) {
         String userId = getCurrentUserId();
 
-        return imageGenerationService.getMyFairies(userId, requestDto);
+        return imageGenerationService.getMyFairies(userId, requestDto.getFairyId(), requestDto.getFairyId());
     }
 
 

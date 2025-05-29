@@ -66,13 +66,13 @@ public class LoraImageGenerationService {
             "bad anatomy", "poorly drawn hands", "extra limbs", "blurry", "low quality", "scary",
             "creepy", "dark shadows");
 
-    public ApiResponse<?> getMyFairies(String userId, LoraImageRequestDto dto) {
+    public ApiResponse<?> getMyFairies(String userId, Long fairyId, Long fairyTaleId) {
         System.out.println("🟡 이미지 생성 시작");
 
         // 1. 데이터 조회 및 검증
-        Fairy fairy = getFairy(dto.getFairyId());
+        Fairy fairy = getFairy(fairyId);
         validateUser(userId);
-        FairyTale fairyTale = getFairyTale(dto.getFairyTaleId());
+        FairyTale fairyTale = getFairyTale(fairyTaleId);
         List<Page> pages = pageRepository.findByFairyTale(fairyTale);
         List<String> plots = extractPlots(pages);
 

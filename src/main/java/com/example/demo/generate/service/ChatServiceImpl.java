@@ -24,6 +24,7 @@ import com.example.demo.domain.repository.PageRepository;
 import com.example.demo.domain.entity.User;
 import com.example.demo.base.util.PromptLoader;
 import com.example.demo.domain.repository.UserRepository;
+import com.example.demo.image.lora.LoraImageGenerationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,6 +63,9 @@ public class ChatServiceImpl implements ChatService {
 
     @Autowired
     private PageRepository pageRepository;
+
+    @Autowired
+    private LoraImageGenerationService imageGenerationService;
 
 
     @Autowired
@@ -344,6 +348,11 @@ public class ChatServiceImpl implements ChatService {
             for (FairyLine fl : lines) {
                 log.debug("대사: {}", fl.getLine());
             }
+
+
+            // 이미지 생성 저장
+            imageGenerationService.getMyFairies(userId, fairy.getId(), fairyTale.getId());
+            log.info("이미지 생성 저장 완료");
 
 
             // 결과 반환
