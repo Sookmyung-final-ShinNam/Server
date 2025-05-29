@@ -168,17 +168,10 @@ public class ChatServiceImpl implements ChatService {
         fairyTaleRepository.save(fairyTale);
 
 
-
-        // 감정인식
-        bodyTemplate = promptLoader.loadPrompt("group_words_by_emotion.json");
-        body = bodyTemplate.replace("{text}", answer);
-
-        String answer2 = callChatGpt(body); // 이 answer는 HTML 일부가 포함된 문자열
-
         StoryIntroResponse response = StoryIntroResponse.builder()
                 .fairyTaleId(fairyTale.getId())
                 .plot(answer)
-                .emotionText(answer2)
+                .emotionText(answer)
                 .build();
 
 
@@ -374,13 +367,10 @@ public class ChatServiceImpl implements ChatService {
 
         }
         else {
-            // 감정인식
-            ApiResponse<String> res = emotionInterfaceService.emotionHtml(userId, answer);
-            String emotionText = res.getResult();
 
             NextStoryResponse response = NextStoryResponse.builder()
                     .plot(answer)
-                    .emotionText(emotionText)
+                    .emotionText(answer)
                     .build();
 
             return ApiResponse.of(SuccessStatus.CHAT_SUCCESS, response);
