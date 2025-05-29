@@ -99,3 +99,16 @@ kakao:
     approvalUrl: "${base-url}/api/permit/payment/approve" # 결제 승인시 리다이렉트 url
     cancelUrl: "${base-url}/api/permit/payment/cancel" # 결제 취소시 리다이렉트 url
     failUrl: "${base-url}/api/permit/payment/fail" # 결제 실패시 리다이렉트 url
+
+# s3
+cloud:
+  aws:
+    s3:
+      bucket: "${s3-bucket}"
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+    credentials:
+      accessKey: "${s3-accessKey}"
+      secretKey: "${s3-secretKey}"
