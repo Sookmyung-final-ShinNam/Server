@@ -1,4 +1,4 @@
-package com.example.demo.image;
+package com.example.demo.image.lora;
 
 import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.api.exception.CustomException;
@@ -41,7 +41,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ImageGenerationService {
+public class LoraImageGenerationService {
 
     private final RestTemplate restTemplate;
     private final FileService fileService;
@@ -66,7 +66,7 @@ public class ImageGenerationService {
             "bad anatomy", "poorly drawn hands", "extra limbs", "blurry", "low quality", "scary",
             "creepy", "dark shadows");
 
-    public ApiResponse<?> getMyFairies(String userId, ImageRequestDto dto) {
+    public ApiResponse<?> getMyFairies(String userId, LoraImageRequestDto dto) {
         System.out.println("🟡 이미지 생성 시작");
 
         // 1. 데이터 조회 및 검증
@@ -147,34 +147,14 @@ public class ImageGenerationService {
             // 이미지 url
             String imageResult = null;
 
-
-            // 이미지 생성 (1이면 모델, 2이면 gpt)
-            int modelType = 2; // gpt 시도 중
-
-            if (modelType == 1) {
-                // 기존 모델 (Base64 반환)
-                imageResult = requestImageGeneration(fullPrompt);
-                if (imageResult == null) {
-                    System.out.println("❌ 이미지 생성 실패 (기존 모델)");
-                    continue;
-                }
-                String s3Url = uploadImageToS3(imageResult);
-                uploadedImageUrls.add(s3Url);
+            // 이미지 생성
+            imageResult = requestImageGeneration(fullPrompt);
+            if (imageResult == null) {
+                System.out.println("❌ 이미지 생성 실패 (기존 모델)");
+                continue;
             }
-            else if (modelType == 2) {
-                // GPT API (URL 반환)
-                String gptImageUrl = generateImageWithGptApi(fullPrompt);
-                if (gptImageUrl == null) {
-                    System.out.println("❌ 이미지 생성 실패 (GPT API)");
-                    continue;
-                }
-                uploadedImageUrls.add(gptImageUrl);
-
-            } else {
-                System.out.println("❌ 알 수 없는 모델 타입: " + modelType);
-                break;
-            }
-
+            String s3Url = uploadImageToS3(imageResult);
+            uploadedImageUrls.add(s3Url);
         }
 
         return uploadedImageUrls;
@@ -244,65 +224,6 @@ public class ImageGenerationService {
                 }
             }
             pageRepository.saveAll(pages);
-        }
-    }
-
-    // gpt api - 이미지 생성
-    public String generateImageWithGptApi(String prompt) {
-        try {
-            String urlStr = "https://api.openai.com/v1/images/generations";
-            URL url = new URL(urlStr);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-
-            // GPT 이미지 생성 API 요청 바디
-            String requestBody = String.format("""
-            {
-                "model": "dall-e-3",
-                "prompt": "%s",
-                "n": 1,
-                "size": "1024x1024"
-            }
-            """, prompt.replace("\"", "\\\""));
-
-
-            try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
-            }
-
-            int responseCode = conn.getResponseCode();
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        response.append(line.trim());
-                    }
-                    ObjectMapper mapper = new ObjectMapper();
-                    JsonNode json = mapper.readTree(response.toString());
-                    // 이미지 URL을 반환
-                    String imageUrl = json.get("data").get(0).get("url").asText();
-                    // 여기선 Base64가 아니라 외부 URL 반환임
-                    return imageUrl;
-                }
-            } else {
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
-                    StringBuilder errorResponse = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        errorResponse.append(line.trim());
-                    }
-                    log.error("GPT 이미지 생성 실패 응답 코드: {}, 메시지: {}", responseCode, errorResponse.toString());
-                }
-                return null;
-            }
-        } catch (IOException e) {
-            log.error("GPT 이미지 생성 중 예외 발생: {}", e.getMessage());
-            return null;
         }
     }
 

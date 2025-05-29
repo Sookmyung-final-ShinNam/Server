@@ -1,4 +1,4 @@
-package com.example.demo.image;
+package com.example.demo.image.lora;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
