@@ -89,7 +89,7 @@ chatgpt:
 
 # replicate API
 replicate:
-  api-key: "${Replicate_API_KEY}"
+  api-key: "${REPLICATE_API_KEY}"
 
 # kakao pay API
 kakao:
