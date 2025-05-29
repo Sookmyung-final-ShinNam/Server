@@ -36,11 +36,13 @@ public class ImageGenerationService {
     private final FairyTaleRepository fairyTaleRepository;
     private final PageRepository pageRepository;
 
+    // 외형 + 스타일 고정
     private static final String BASE_PROMPT = "a wholesome, child-safe, kindergarten-aged cartoon character, "
             + "in a long-sleeved pastel clothes, wearing tights and shoes, "
             + "friendly and cute, colorful fairytale style, full body, "
-            + "Studio Ghibli style, White background";
+            + "Studio Ghibli style, white background";
 
+    // 부적절하거나 품질이 낮은 요소 제거
     private static final String NEGATIVE_PROMPT = String.join(", ",
             "nsfw", "nude", "naked", "lingerie", "swimsuit", "cleavage", "breasts",
             "exposed skin", "revealing outfit", "tight clothes", "suggestive pose", "sexualized",
@@ -52,33 +54,29 @@ public class ImageGenerationService {
 
         System.out.println("🟡 이미지 생성 시작");
 
-        // 요정 찾기
         Fairy fairy = fairyRepository.findById(dto.getFairyId())
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_NOT_FOUND));
 
-        // 사용자 찾기
         userRepository.findByEmail(userId)
                 .orElseThrow(() -> new CustomException(ErrorStatus.USER_NOT_FOUND));
 
-        // 동화 찾기
         FairyTale fairyTale = fairyTaleRepository.findById(dto.getFairyTaleId())
                 .orElseThrow(() -> new CustomException(ErrorStatus.FAIRY_TALE_NOT_FOUND));
 
-        // 페이지들 가져오기
         List<Page> pages = pageRepository.findByFairyTale(fairyTale);
 
-        // 줄거리 추출
         List<String> plots = pages.stream()
                 .map(Page::getPlot)
                 .filter(Objects::nonNull)
                 .toList();
 
-        // 결과 이미지 URL 리스트
         List<String> uploadedImageUrls = new ArrayList<>();
 
-        // 동작 리스트 생성 (첫 번째는 기본값)
+        // 기본 동작 (첫 번째 기본 이미지)
         List<String> behaviors = new ArrayList<>();
-        behaviors.add("A young girl stands facing forward, raising one hand high with a bright smile, as if waving hello or asking a question.");
+        behaviors.add("The girl stands smiling brightly with one hand waving in front of a white background.");
+
+        // 나머지는 줄거리를 가져옴.
         behaviors.addAll(plots);
 
         for (String behavior : behaviors) {
@@ -95,14 +93,16 @@ public class ImageGenerationService {
             payload.put("cfg_scale", 7);
             payload.put("width", 540);
             payload.put("height", 540);
-            payload.put("seed", 2873609975L);
+
+            // ✅ 외형 고정: seed 고정
+            payload.put("seed", 123456789L);
             payload.put("enable_hr", false);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
-            String url = "https://0ab2121e3b41.ngrok.app/sdapi/v1/txt2img";
+            String url = "https://55623e0fc02f.ngrok.app/sdapi/v1/txt2img";
             System.out.println("🔁 API 요청 전송 중...");
             ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
             System.out.println("✅ 응답 수신 완료");
@@ -120,7 +120,7 @@ public class ImageGenerationService {
 
             MultipartFile multipartFile = new MockMultipartFile(
                     "file",
-                    UUID.randomUUID() + ".png",  // 고유한 파일명
+                    UUID.randomUUID() + ".png",
                     MediaType.IMAGE_PNG_VALUE,
                     imageBytes
             );
@@ -131,20 +131,20 @@ public class ImageGenerationService {
                     multipartFile
             );
 
-            uploadedImageUrls.add(uploadResponse.getResult().getS3Url());  // 혹은 필요한 데이터
+            uploadedImageUrls.add(uploadResponse.getResult().getS3Url());
         }
 
-        // ✅ 첫 번째 이미지는 요정의 기본 이미지로 저장
+        // 첫 이미지는 기본 프로필 이미지로 저장
         if (!uploadedImageUrls.isEmpty()) {
             fairy.setFirstImage(uploadedImageUrls.get(0));
             fairyRepository.save(fairy);
         }
 
-        // ✅ 이후 이미지들을 페이지에 순서대로 매핑
+        // 나머지 이미지를 페이지에 매핑
         if (uploadedImageUrls.size() > 1) {
             for (int i = 1; i < uploadedImageUrls.size(); i++) {
                 if (i - 1 < pages.size()) {
-                    Page page = pages.get(i - 1); // i=1부터 시작하므로 index 맞추기
+                    Page page = pages.get(i - 1);
                     page.setImage(uploadedImageUrls.get(i));
                 }
             }
@@ -152,8 +152,8 @@ public class ImageGenerationService {
         }
 
         return ApiResponse.of(SuccessStatus._OK, uploadedImageUrls);
-
     }
+
 
 
 }
