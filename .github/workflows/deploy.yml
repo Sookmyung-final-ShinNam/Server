@@ -39,6 +39,10 @@ jobs:
           sed -i "s|\${GPT_API_KEY}|${{ secrets.GPT_API_KEY }}|g" ./src/main/resources/application.yml
           sed -i "s|\${KAKAOPAY_CID}|${{ secrets.KAKAOPAY_CID }}|g" ./src/main/resources/application.yml
           sed -i "s|\${KAKAOPAY_PASS}|${{ secrets.KAKAOPAY_PASS }}|g" ./src/main/resources/application.yml
+
+          sed -i "s|\${s3-bucket}|${{ secrets.s3Bucket }}|g" ./src/main/resources/application.yml
+          sed -i "s|\${s3-accessKey}|${{ secrets.s3AccessKey }}|g" ./src/main/resources/application.yml
+          sed -i "s|\${s3-secretKey}|${{ secrets.s3SecretKey }}|g" ./src/main/resources/application.yml
           
           echo "${{ secrets.KEY_STORE_BASE64 }}" | base64 --decode > ./src/main/resources/keystore.p12
 
