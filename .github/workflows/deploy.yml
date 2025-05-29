@@ -36,7 +36,10 @@ jobs:
           
           sed -i "s|\${KAKAO_CLIENT_ID}|${{ secrets.KAKAO_CLIENT_ID }}|g" ./src/main/resources/application.yml
           sed -i "s|\${KAKAO_CLIENT_SECRET}|${{ secrets.KAKAO_CLIENT_SECRET }}|g" ./src/main/resources/application.yml 
+          
           sed -i "s|\${GPT_API_KEY}|${{ secrets.GPT_API_KEY }}|g" ./src/main/resources/application.yml
+          sed -i "s|\${Replicate_API_KEY}|${{ secrets.Replicate_API_KEY }}|g" ./src/main/resources/application.yml
+
           sed -i "s|\${KAKAOPAY_CID}|${{ secrets.KAKAOPAY_CID }}|g" ./src/main/resources/application.yml
           sed -i "s|\${KAKAOPAY_PASS}|${{ secrets.KAKAOPAY_PASS }}|g" ./src/main/resources/application.yml
 

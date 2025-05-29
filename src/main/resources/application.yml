@@ -87,6 +87,9 @@ spring:
 chatgpt:
   api-key: "${GPT_API_KEY}"
 
+# replicate API
+replicate:
+  api-key: "${Replicate_API_KEY}"
 
 # kakao pay API
 kakao:
