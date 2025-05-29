@@ -149,7 +149,7 @@ public class ImageGenerationService {
 
 
             // 이미지 생성 (1이면 모델, 2이면 gpt)
-            int modelType = 2; // gpt 시도 중
+            int modelType = 1; // lora 시도 중
 
             if (modelType == 1) {
                 // 기존 모델 (Base64 반환)
