@@ -70,7 +70,7 @@ public class ImageGenerationService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
-        String url = "https://4829a66bfe41.ngrok.app/sdapi/v1/txt2img";
+        String url = "https://5d695e7ae998.ngrok.app/sdapi/v1/txt2img";
         System.out.println("🔁 API 요청 전송 중...");
 
         ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
