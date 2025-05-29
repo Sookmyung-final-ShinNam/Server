@@ -17,6 +17,7 @@ public class FairyImage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(columnDefinition = "TEXT")
     private String image;
 
     @ManyToOne
