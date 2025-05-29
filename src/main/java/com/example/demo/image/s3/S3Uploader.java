@@ -4,7 +4,6 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.example.demo.base.api.status.ErrorStatus;
-import com.example.demo.base.api.status.SuccessStatus;
 import com.example.demo.base.api.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

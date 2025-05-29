@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileConverter {
 
-    // 엔티티 -> DTO 변환
     public FileDTO toDTO(FileEntity entity) {
         return FileDTO.builder()
                 .folderName(entity.getFolderName())

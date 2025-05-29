@@ -9,7 +9,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@RestController
 @RequestMapping("/files")
 @RequiredArgsConstructor
 public class FileController {
@@ -64,4 +63,5 @@ public class FileController {
         ApiResponse<FileDTO> response = fileService.updateFile(fileName, file);
         return response;
     }
+
 }
