@@ -1,13 +1,21 @@
 package com.example.demo.image;
 
+import com.example.demo.base.api.ApiResponse;
+import com.example.demo.base.api.status.SuccessStatus;
+import com.example.demo.image.s3.FileConverter;
+import com.example.demo.image.s3.FileDTO;
+import com.example.demo.image.s3.FileRepository;
+import com.example.demo.image.s3.FileService;
 import io.jsonwebtoken.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +30,10 @@ import java.util.Map;
 public class ImageGenerationService {
 
     private final RestTemplate restTemplate;
+
+    private final FileService fileService;
+    private final FileRepository fileRepository;
+    private final FileConverter fileConverter;
 
     private static final String BASE_PROMPT = "a wholesome, child-safe, kindergarten-aged cartoon character, "
             + "in a long-sleeved pastel clothes, wearing tights and shoes, "
@@ -78,13 +90,18 @@ public class ImageGenerationService {
 
         byte[] imageBytes = Base64.getDecoder().decode(base64Image);
 
-        String outputPath = "generated_child_character.png";
-        Path path = Paths.get(outputPath);
-        Files.write(path, imageBytes);
+        // MultipartFile로 변환
+        MultipartFile multipartFile = new MockMultipartFile(
+                "file",
+                "generated_child_character.png",
+                MediaType.IMAGE_PNG_VALUE,
+                imageBytes
+        );
 
-        System.out.println("💾 이미지 저장 완료: " + outputPath);
-        System.out.println("🟢 이미지 생성 프로세스 완료");
+        // S3에 업로드
+        ApiResponse<FileDTO> uploadResponse = fileService.uploadFile("characters", "generated_child_character.png", multipartFile);
 
-        return outputPath;
+        // 업로드된 이미지 경로 반환 (예: S3 URL 또는 저장된 fileDTO 정보)
+        return uploadResponse.getResult().getS3Url();  // 예: fileUrl 필드가 있는 경우
     }
 }
