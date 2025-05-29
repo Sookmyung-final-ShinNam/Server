@@ -22,6 +22,7 @@ import java.util.Map;
 public class ImageGenerationService {
 
     private final RestTemplate restTemplate;
+
     private static final String BASE_PROMPT = "a wholesome, child-safe, kindergarten-aged cartoon character, "
             + "in a long-sleeved pastel clothes, wearing tights and shoes, "
             + "friendly and cute, colorful fairytale style, full body, "
@@ -35,7 +36,10 @@ public class ImageGenerationService {
             "creepy", "dark shadows");
 
     public String generateImage(ImageRequestDto dto) throws IOException, java.io.IOException {
+        System.out.println("🟡 이미지 생성 시작");
+
         String fullPrompt = BASE_PROMPT + ", " + dto.getAppearance() + ", " + dto.getBehavior();
+        System.out.println("📌 프롬프트 구성 완료: " + fullPrompt);
 
         Map<String, Object> payload = new HashMap<>();
         payload.put("prompt", fullPrompt);
@@ -55,12 +59,19 @@ public class ImageGenerationService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
         String url = "https://4829a66bfe41.ngrok.app/sdapi/v1/txt2img";
+        System.out.println("🔁 API 요청 전송 중...");
 
         ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
+        System.out.println("✅ 응답 수신 완료");
 
         List<String> images = (List<String>) response.getBody().get("images");
 
-        if (images == null || images.isEmpty()) throw new RuntimeException("이미지 생성 실패");
+        if (images == null || images.isEmpty()) {
+            System.out.println("❌ 이미지 생성 실패: 응답 내 이미지 없음");
+            throw new RuntimeException("이미지 생성 실패");
+        }
+
+        System.out.println("🖼️ 이미지 base64 수신 성공");
 
         String base64Image = images.get(0).split(",").length > 1 ?
                 images.get(0).split(",")[1] : images.get(0);
@@ -70,6 +81,9 @@ public class ImageGenerationService {
         String outputPath = "generated_child_character.png";
         Path path = Paths.get(outputPath);
         Files.write(path, imageBytes);
+
+        System.out.println("💾 이미지 저장 완료: " + outputPath);
+        System.out.println("🟢 이미지 생성 프로세스 완료");
 
         return outputPath;
     }
