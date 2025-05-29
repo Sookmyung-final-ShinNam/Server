@@ -4,6 +4,7 @@ import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.api.exception.CustomException;
 import com.example.demo.base.api.status.ErrorStatus;
 import com.example.demo.base.api.status.SuccessStatus;
+import com.example.demo.base.util.PromptLoader;
 import com.example.demo.domain.entity.Fairy;
 import com.example.demo.domain.entity.FairyTale;
 import com.example.demo.domain.entity.Page;
@@ -13,7 +14,12 @@ import com.example.demo.domain.repository.PageRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.image.s3.FileDTO;
 import com.example.demo.image.s3.FileService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -23,8 +29,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageGenerationService {
@@ -35,6 +49,12 @@ public class ImageGenerationService {
     private final FairyRepository fairyRepository;
     private final FairyTaleRepository fairyTaleRepository;
     private final PageRepository pageRepository;
+    private final PromptLoader promptLoader;
+
+
+    @Value("${chatgpt.api-key}")
+    private String apiKey;
+
 
     // 외형 + 스타일 고정
     private static final String BASE_PROMPT = "a wholesome, child-safe, kindergarten-aged cartoon character, "
@@ -74,14 +94,33 @@ public class ImageGenerationService {
 
         // 기본 동작 (첫 번째 기본 이미지)
         List<String> behaviors = new ArrayList<>();
-        behaviors.add("The girl stands smiling brightly with one hand waving in front of a white background.");
+        behaviors.add("");
 
         // 나머지는 줄거리를 가져옴.
         behaviors.addAll(plots);
 
+        // 외형 gpt
+        String bodyTemplate = promptLoader.loadPrompt("img_appearance.json");
+        String body = bodyTemplate
+                .replace("{eye color}", fairy.getEyeColor())
+                .replace("{hair color}", fairy.getHairColor())
+                .replace("{hair style}", fairy.getHairStyle())
+                .replace("{gender}", fairy.getGender().toString())
+                .replace("{personality}", fairy.getPersonality())
+                .replace("{age}", fairy.getAge().toString());
+        String appearance = callChatGpt(body);
+
+        // 동화 프롬프트 불러오기
+        bodyTemplate = promptLoader.loadPrompt("img_story.json");
+
         for (String behavior : behaviors) {
+
+            // GPT 로 줄거리 재구성
+            body = bodyTemplate.replace("{plot}", behavior);
+            String answer = callChatGpt(body);
+
             // 프롬프트 구성
-            String fullPrompt = BASE_PROMPT + ", " + fairy.getAppearance() + ", " + behavior;
+            String fullPrompt = BASE_PROMPT + ", " + appearance + ", " + answer;
             System.out.println("📌 프롬프트 구성 완료: " + fullPrompt);
 
             Map<String, Object> payload = new HashMap<>();
@@ -154,6 +193,77 @@ public class ImageGenerationService {
         return ApiResponse.of(SuccessStatus._OK, uploadedImageUrls);
     }
 
+    // 공통 부분 : gpt 호출
+    public String callChatGpt(String finalPromptJson) {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL("https://api.openai.com/v1/chat/completions");
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+
+
+            // ✅ JSON 문자열이 유효한지 파싱해서 확인 (선택적 유효성 체크)
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                // 줄바꿈 문자 제거 (가장 안전한 방식)
+                finalPromptJson = finalPromptJson.replaceAll("[\\n\\r]+", " ");
+                System.out.println("🔎 전달된 프롬프트(JSON):\n" + finalPromptJson);
+
+                JsonNode requestNode = mapper.readTree(finalPromptJson);
+                System.out.println("✅ JSON 파싱 성공: " + requestNode.toPrettyString());
+            } catch (JsonProcessingException e) {
+                System.err.println("❌ JSON 파싱 실패: " + e.getMessage());
+                throw new CustomException(ErrorStatus.JSON_PARSE_ERROR);
+            }
+
+            System.out.println("✅ JSON 형식 확인 완료");
+
+            // ✅ JSON 그대로 전송
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = finalPromptJson.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            // ✅ 응답 상태 코드 확인
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        response.append(line.trim());
+                    }
+
+                    JsonNode responseJson = mapper.readTree(response.toString());
+                    return responseJson.get("choices").get(0).get("message").get("content").asText();
+                }
+            } else {
+                // ✅ 오류 응답 처리
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
+                    StringBuilder errorResponse = new StringBuilder();
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        errorResponse.append(line.trim());
+                    }
+
+                    System.err.println("❌ ChatGPT 오류 응답 코드: " + responseCode);
+                    System.err.println("❌ ChatGPT 오류 메시지: " + errorResponse);
+
+                    // 오류 메시지 파싱해서 사용자에게 안내할 수도 있음
+                    JsonNode errorJson = mapper.readTree(errorResponse.toString());
+                    String errorMessage = errorJson.path("error").path("message").asText();
+                    throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
+                }
+            }
+
+        } catch (IOException e) {
+            log.error("❌ ChatGPT 호출 중 예외 발생: {}", e.getMessage());
+            throw new CustomException(ErrorStatus.CHAT_GPT_API_CALL_FAILED);
+        }
+    }
 
 
 }
