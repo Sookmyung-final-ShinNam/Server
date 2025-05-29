@@ -177,7 +177,7 @@ public class LoraImageGenerationService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
-        String url = "https://fa83fab18e45.ngrok.app/sdapi/v1/txt2img";
+        String url = "https://6e30c07f3a28.ngrok.app/sdapi/v1/txt2img";
         System.out.println("🔁 API 요청 전송 중...");
 
         ResponseEntity<Map> response = restTemplate.postForEntity(url, request, Map.class);
