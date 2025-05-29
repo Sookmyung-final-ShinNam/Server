@@ -168,8 +168,7 @@ public class ImageGenerationService {
                     System.out.println("❌ 이미지 생성 실패 (GPT API)");
                     continue;
                 }
-                String s3Url = uploadImageToS3(gptImageUrl);
-                uploadedImageUrls.add(s3Url);
+                uploadedImageUrls.add(gptImageUrl);
 
             } else {
                 System.out.println("❌ 알 수 없는 모델 타입: " + modelType);
