@@ -32,6 +32,8 @@ public class Fairy extends BaseEntity {
     private Gender gender;       // 요정 성별
 
     private Boolean isFavorite;
+
+    @Column(columnDefinition = "TEXT")
     private String firstImage;
 
     @ManyToOne
