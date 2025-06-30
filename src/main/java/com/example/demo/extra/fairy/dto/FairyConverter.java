@@ -5,7 +5,7 @@ import com.example.demo.domain.entity.FairyLine;
 import com.example.demo.domain.entity.FairyParticipation;
 import com.example.demo.extra.fairyTale.dto.FairyTaleInfoResponse;
 import com.example.demo.domain.entity.Fairy;
-import com.example.demo.extra.main.dto.FavoriteFairy;
+import com.example.demo.extra.home.dto.FavoriteFairy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

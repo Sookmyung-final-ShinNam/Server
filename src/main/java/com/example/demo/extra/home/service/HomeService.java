@@ -1,4 +1,4 @@
-package com.example.demo.extra.main.service;
+package com.example.demo.extra.home.service;
 
 import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.api.exception.CustomException;
@@ -8,8 +8,8 @@ import com.example.demo.extra.fairy.dto.FairyConverter;
 import com.example.demo.domain.entity.User;
 import com.example.demo.domain.repository.FairyRepository;
 import com.example.demo.domain.repository.UserRepository;
-import com.example.demo.extra.main.dto.FavoriteFairy;
-import com.example.demo.extra.main.dto.UserConverter;
+import com.example.demo.extra.home.dto.FavoriteFairy;
+import com.example.demo.extra.home.dto.UserConverter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MainService {
+public class HomeService {
 
     private final UserRepository userRepository;
     private final FairyRepository fairyRepository;

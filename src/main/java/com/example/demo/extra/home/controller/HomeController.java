@@ -1,19 +1,19 @@
-package com.example.demo.extra.main.controller;
+package com.example.demo.extra.home.controller;
 
 import com.example.demo.base.api.ApiResponse;
 import com.example.demo.base.BaseController;
 import com.example.demo.base.api.exception.CustomException;
 import com.example.demo.base.api.status.ErrorStatus;
-import com.example.demo.extra.main.service.MainService;
+import com.example.demo.extra.home.service.HomeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/main")
-public class MainController extends BaseController {
+public class HomeController extends BaseController {
 
     @Autowired
-    private MainService mainService;
+    private HomeService mainService;
 
     // 메인 화면
     @GetMapping

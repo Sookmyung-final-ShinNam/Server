@@ -1,4 +1,4 @@
-package com.example.demo.extra.main.dto;
+package com.example.demo.extra.home.dto;
 
 import com.example.demo.domain.entity.User;
 
